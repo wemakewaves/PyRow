@@ -1,8 +1,8 @@
-# PyRow
-
-NOTE: This code has not been thoroughly tested and may not function as advertised.
+PyRow
+============
+*NOTE: This code has not been thoroughly tested and may not function as advertised.
 This documentation my contain mistakes or incomplete information.
-Please report and findings to the author so that they may be addressed in a stable release.
+Please report and findings to the author so that they may be addressed in a stable release.*
 
 
 
@@ -43,16 +43,16 @@ import pyrow
 
 RUNNING
 ------------
-pyrow.find()
+`pyrow.find()`
 -returns an array of all the ergs currently connected to the computer
 
-pyrow.pyrow(erg)
+`pyrow.pyrow(erg)`
 -creates an object for communicating with the erg, erg is obtained from the pyrow.find() function
  ex: creating a pyrow object from the first erg found
    ergs = pyrow.find()
    erg = pyrow.pyrow(ergs[0])
 
-pyrow.pyrow.getStatus()
+`pyrow.pyrow.getStatus()`
 -returns status of machine as a number
   0 = 'Error'
   1 = 'Ready'
@@ -65,7 +65,7 @@ pyrow.pyrow.getStatus()
   8 = 'Manual'
   9 = 'Offline'
 
-pyrow.pyrow.getMonitor(forceplot=False)
+`pyrow.pyrow.getMonitor(forceplot=False)`
 -returns data from the monitor in dictionary format, keys listed below with descriptions
   time = Monitor time in seconds
   distance = Monitor distance in meters
@@ -80,13 +80,13 @@ pyrow.pyrow.getMonitor(forceplot=False)
   forceplot = Force Plot Data
   strokestate = Stroke State
 
-pyrow.pyrow.getForcePlot()
+`pyrow.pyrow.getForcePlot()`
 -returns force plot data and stroke state in dictionary format, keys listed below with descriptions
   forceplot = Force Plot Data (array varying in length from 0 to 16)
   strokestate = Stroke State
   status = Machine status
 
-pyrow.pyrow.getWorkout()
+`pyrow.pyrow.getWorkout()`
 -returns data related to the overall workout in dictionary format, keys listed below with descriptions
   userid = User ID
   type = Workout Type
@@ -95,7 +95,7 @@ pyrow.pyrow.getWorkout()
   intcount = Workout Interval Count
   status = Machine Status
 
-pyrow.pyrow.getErg()
+`pyrow.pyrow.getErg()`
 -returns non workout related data about the erg in dictionary format, keys listed below with descriptions
   mfgid = Manufacturing ID
   cid = CID
@@ -108,10 +108,10 @@ pyrow.pyrow.getErg()
   mininterframe = Min Interframe
   status = Machine status
 
-pyrow.pyrow.setClock()
+`pyrow.pyrow.setClock()`
 -sets the clock on the erg equal to the clock on the computer
 
-pyrow.pyrow.setWorkout()
+`pyrow.pyrow.setWorkout()`
 -if machine is in the ready state function will set the workout and display the start workout screen, allowable parameters are listed below (the current PM SDK does not allow for setting invervaled workouts)
 
  Chose one
@@ -133,17 +133,20 @@ pyrow.pyrow.setWorkout()
   erg.setWorkout(distance=2000, split=500, pace=120)
 
 
-pyrow.pyrow.send(command)
+`pyrow.pyrow.send(command)`
 -sends a csafe command to the rowing machine and returns the result, command is an array
  results are returned as a dictionary with the key being the csafe command name
  ex: setting a workout of 10 minutes with a split of 1 minute (60 seconds)
-   command = ['CSAFE_SETTWORK_CMD', 0, 10, 0,'CSAFE_PM_SET_SPLITDURATION', 0, 60]
-   erg.send(command)
+
+    command = ['CSAFE_SETTWORK_CMD', 0, 10, 0,'CSAFE_PM_SET_SPLITDURATION', 0, 60]
+    erg.send(command)
+
  ex: getting pace and printing it out
-   command = ['CSAFE_GETPACE_CMD',]
-   result = erg.send(command)
-   print "Stroke Pace = " + str(result['CSAFE_GETPACE_CMD'][0])
-   print "Stroke Units = " + str(result['CSAFE_GETPACE_CMD'][1])
+
+    command = ['CSAFE_GETPACE_CMD',]
+    result = erg.send(command)
+    print "Stroke Pace = " + str(result['CSAFE_GETPACE_CMD'][0])
+    print "Stroke Units = " + str(result['CSAFE_GETPACE_CMD'][1])
 
 FILES
 ------------
