@@ -27,10 +27,16 @@ REQUIREMENTS
 PyRow has been tested on a Windows machine with the software versions listed below, PyRow should be able to work on any machine that can run Python & PyUSB but this has not been tested and confirmed.
 
 Python (Tested with 2.7.2) [http://python.org/]
-PyUSB (Tested with 1.0 from github ##/##/##) [http://sourceforge.net/apps/trac/pyusb/]
-libusb-win32 (Tested with 1.2.5.0) [http://sourceforge.net/apps/trac/libusb-win32/wiki]*
+libusb
 
-*for *nix and Mac libusb is to be used in place of libusb-win32 [http://www.libusb.org/]
+    sudo apt-get install libudev-dev libusb-dev python python-usb
+
+Walac's PyUSB [http://walac.github.io/pyusb]
+
+    git clone git@github.com:walac/pyusb.git
+    cd pyusb
+    sudo python setup.py install
+
 
 
 INSTALLING
