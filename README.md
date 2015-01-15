@@ -4,15 +4,19 @@ PyRow
 This documentation my contain mistakes or incomplete information.
 Please report and findings to the author so that they may be addressed in a stable release.*
 
-
-
 ABOUT
 -----------
 PyRow is python code that allows one to interact with a Concept 2 Rowing Ergometer PM3 or PM4 monitor using python.  PyRow sends and receives information from the Ergometer using csafe commands or built in functions (listed below).  The goal of PyRow is to allow for multiple platforms to have easy access to the Ergometer.
 
 For an explanation of the csafe commands please use the following documentation:
-- Concept2 PM Communication Interface Definition [http://www.concept2.com/us/service/software/sdk/default.asp] *Need to download the SDK to get the document
-- Communications Specification for Fitness Equipment [http://www.fitlinxx.com/CSAFE/]
+- [Concept2 PM Communication Interface Definition](http://www.concept2.com/us/service/software/sdk/default.asp)
+
+
+*Need to download the SDK to get the document*
+
+
+- [Communications Specification for Fitness Equipment](http://www.fitlinxx.com/CSAFE/)
+
 
 Site: http://www.newhavenrowingclub.org/pyrow/
 
@@ -24,7 +28,7 @@ Licensed under the Simplified BSD License.
 
 REQUIREMENTS
 ------------
-PyRow has been tested on a Windows machine with the software versions listed below, PyRow should be able to work on any machine that can run Python & PyUSB but this has not been tested and confirmed.
+PyRow has been tested on an Ubuntu machine with the software versions listed below, PyRow should be able to work on any machine that can run Python & PyUSB but this has not been tested and confirmed.
 
 Python (Tested with 2.7.2) [http://python.org/]
 libusb
@@ -37,14 +41,15 @@ Walac's PyUSB [http://walac.github.io/pyusb]
     cd pyusb
     sudo python setup.py install
 
+Other versions of the PyRow library have been tested on Windows.
 
 
 INSTALLING
 ------------
-After the software has become stable the software will be packaged as a module.  For now copying 'pyrow.py', 'csafe_cmd.py', and 'csafe_dic.py' into the same directory as your code will work.
+After the software has become stable the software will be packaged as a module.  For now copying `pyrow.py`, `csafe_cmd.py`, and `csafe_dic.py` into the same directory as your code will work.
 
 Include PyRow in your code with the following line of code:
-import pyrow
+`import pyrow`
 
 
 RUNNING
