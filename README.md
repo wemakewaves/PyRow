@@ -54,76 +54,67 @@ Include PyRow in your code with the following line of code:
 
 RUNNING
 ------------
-`pyrow.find()`
--returns an array of all the ergs currently connected to the computer
+`pyrow.find()` - returns an array of all the ergs currently connected to the computer
 
-`pyrow.pyrow(erg)`
--creates an object for communicating with the erg, erg is obtained from the pyrow.find() function
+`pyrow.pyrow(erg)` - creates an object for communicating with the erg, erg is obtained from the pyrow.find() function
  ex: creating a pyrow object from the first erg found
    ergs = pyrow.find()
    erg = pyrow.pyrow(ergs[0])
 
-`pyrow.pyrow.getStatus()`
--returns status of machine as a number
-  0 = 'Error'
-  1 = 'Ready'
-  2 = 'Idle'
-  3 = 'Have ID'
-  4 = 'N/A'
-  5 = 'In Use'
-  6 = 'Pause'
-  7 = 'Finished'
-  8 = 'Manual'
-  9 = 'Offline'
+`pyrow.pyrow.getStatus()` - returns status of machine as a number
+  - 0 = 'Error'
+  - 1 = 'Ready'
+  - 2 = 'Idle'
+  - 3 = 'Have ID'
+  - 4 = 'N/A'
+  - 5 = 'In Use'
+  - 6 = 'Pause'
+  - 7 = 'Finished'
+  - 8 = 'Manual'
+  - 9 = 'Offline'
 
-`pyrow.pyrow.getMonitor(forceplot=False)`
--returns data from the monitor in dictionary format, keys listed below with descriptions
-  time = Monitor time in seconds
-  distance = Monitor distance in meters
-  spm = Strokes per Minute
-  power = Power in watts
-  pace = /500m pace
-  calhr = Calories Burned per Hours
-  calories = Total Calories Burned
-  heartrate = Current Heart Rate
-  status = Machine Status
+`pyrow.pyrow.getMonitor(forceplot=False)` - returns data from the monitor in dictionary format, keys listed below with descriptions
+  - time = Monitor time in seconds
+  - distance = Monitor distance in meters
+  - spm = Strokes per Minute
+  - power = Power in watts
+  - pace = /500m pace
+  - calhr = Calories Burned per Hours
+  - calories = Total Calories Burned
+  - heartrate = Current Heart Rate
+  - status = Machine Status
  If keyvalue forceplot is set to true
-  forceplot = Force Plot Data
-  strokestate = Stroke State
+  - forceplot = Force Plot Data
+  - strokestate = Stroke State
 
-`pyrow.pyrow.getForcePlot()`
--returns force plot data and stroke state in dictionary format, keys listed below with descriptions
-  forceplot = Force Plot Data (array varying in length from 0 to 16)
-  strokestate = Stroke State
-  status = Machine status
+`pyrow.pyrow.getForcePlot()` - returns force plot data and stroke state in dictionary format, keys listed below with descriptions
+  - forceplot = Force Plot Data (array varying in length from 0 to 16)
+  - strokestate = Stroke State
+  - status = Machine status
 
-`pyrow.pyrow.getWorkout()`
--returns data related to the overall workout in dictionary format, keys listed below with descriptions
-  userid = User ID
-  type = Workout Type
-  state = Workout State
-  inttype = Interval Type
-  intcount = Workout Interval Count
-  status = Machine Status
+`pyrow.pyrow.getWorkout()` - returns data related to the overall workout in dictionary format, keys listed below with descriptions
+  - userid = User ID
+  - type = Workout Type
+  - state = Workout State
+  - inttype = Interval Type
+  - intcount = Workout Interval Count
+  - status = Machine Status
 
-`pyrow.pyrow.getErg()`
--returns non workout related data about the erg in dictionary format, keys listed below with descriptions
-  mfgid = Manufacturing ID
-  cid = CID
-  model = Erg Model
-  hwversion = Hardware Version
-  swversion = Software Version
-  serial = Ascii Serial Number
-  maxrx = Max Rx Frame
-  maxtx = Max Tx Frame
-  mininterframe = Min Interframe
-  status = Machine status
+`pyrow.pyrow.getErg()` - returns non workout related data about the erg in dictionary format, keys listed below with descriptions
+  - mfgid = Manufacturing ID
+  - cid = CID
+  - model = Erg Model
+  - hwversion = Hardware Version
+  - swversion = Software Version
+  - serial = Ascii Serial Number
+  - maxrx = Max Rx Frame
+  - maxtx = Max Tx Frame
+  - mininterframe = Min Interframe
+  - status = Machine status
 
-`pyrow.pyrow.setClock()`
--sets the clock on the erg equal to the clock on the computer
+`pyrow.pyrow.setClock()` - sets the clock on the erg equal to the clock on the computer
 
-`pyrow.pyrow.setWorkout()`
--if machine is in the ready state function will set the workout and display the start workout screen, allowable parameters are listed below (the current PM SDK does not allow for setting invervaled workouts)
+`pyrow.pyrow.setWorkout()` - if machine is in the ready state function will set the workout and display the start workout screen, allowable parameters are listed below (the current PM SDK does not allow for setting invervaled workouts)
 
  Chose one
   program = number from 0 to 10 (15 if the log card is installed), 1 thru 10 relate to workouts saved in the monitor
@@ -161,17 +152,12 @@ RUNNING
 
 FILES
 ------------
-'strokelog.py'
--an example program that records time, distance, strokes per min, pace, and force plot data for each stroke to a csv file
+`strokelog.py` - an example program that records time, distance, strokes per min, pace, and force plot data for each stroke to a csv file
 
-'statshow.py'
--an example program that displays the current machine, workout, and stroke status
+`statshow.py` - an example program that displays the current machine, workout, and stroke status
 
-'pyrow.py'
--file to be loaded by user, used to connect to erg and send/receive data
+`pyrow.py` - file to be loaded by user, used to connect to erg and send/receive data
 
-'csafe_cmd.py'
--converts between csafe commands and byte arrays for pyrow.py, user does not need to load this file directly
+`csafe_cmd.py` - converts between csafe commands and byte arrays for pyrow.py, user does not need to load this file directly
 
-'csafe_dic.py'
--contains dictionaries of the csafe commands to be used by csafe_cmd.py, user does not need to load this file directly
+`csafe_dic.py` - contains dictionaries of the csafe commands to be used by csafe_cmd.py, user does not need to load this file directly
