@@ -34,14 +34,14 @@ erg.setWorkout(distance=2000, split=100, pace=120)
 
 #Inf loop
 while 1:
-	results = erg.send(command)
-	if cstate != (results['CSAFE_GETSTATUS_CMD'][0] & 0xF):
-		cstate = results['CSAFE_GETSTATUS_CMD'][0] & 0xF
-		print "State " + str(cstate) + ": " + state[cstate]
-	if cstroke != results['CSAFE_PM_GET_STROKESTATE'][0]:
-		cstroke = results['CSAFE_PM_GET_STROKESTATE'][0]
-		print "Stroke " + str(cstroke) + ": " + stroke[cstroke]
-	if cworkout != results['CSAFE_PM_GET_WORKOUTSTATE'][0]:
-		cworkout = results['CSAFE_PM_GET_WORKOUTSTATE'][0]
-		print "Workout " + str(cworkout) + ": " + workout[cworkout]
-	time.sleep(1)
+    results = erg.send(command)
+    if cstate != (results['CSAFE_GETSTATUS_CMD'][0] & 0xF):
+        cstate = results['CSAFE_GETSTATUS_CMD'][0] & 0xF
+        print "State " + str(cstate) + ": " + state[cstate]
+    if cstroke != results['CSAFE_PM_GET_STROKESTATE'][0]:
+        cstroke = results['CSAFE_PM_GET_STROKESTATE'][0]
+        print "Stroke " + str(cstroke) + ": " + stroke[cstroke]
+    if cworkout != results['CSAFE_PM_GET_WORKOUTSTATE'][0]:
+        cworkout = results['CSAFE_PM_GET_WORKOUTSTATE'][0]
+        print "Workout " + str(cworkout) + ": " + workout[cworkout]
+    time.sleep(1)

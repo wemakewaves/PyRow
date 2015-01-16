@@ -26,42 +26,42 @@ file.write('Time, Distance, SPM, Pace, Force Plot\n')
 workout = erg.getWorkout()
 print "Waiting for workout to start ..."
 while workout['state'] == 0:
-	time.sleep(1)
-	workout = erg.getWorkout()
+    time.sleep(1)
+    workout = erg.getWorkout()
 print "Workout has begun"
 
 #Loop until workout ends
 while workout['state'] == 1:
 
-	forceplot = erg.getForcePlot()
-	#Loop while waiting for drive
-	while forceplot['strokestate'] != 2 and workout['state']  == 1:
-		#ToDo: sleep?
-		forceplot = erg.getForcePlot()
-		workout = erg.getWorkout()
+    forceplot = erg.getForcePlot()
+    #Loop while waiting for drive
+    while forceplot['strokestate'] != 2 and workout['state']  == 1:
+        #ToDo: sleep?
+        forceplot = erg.getForcePlot()
+        workout = erg.getWorkout()
 
 
 
-	#Record force data during the drive
-	force = forceplot['forceplot'] #start of pull (when strokestate first changed to 2)
-	monitor = erg.getMonitor() #get monitor data for start of stroke
-	#Loop during drive
-	while forceplot['strokestate'] == 2:
-		#ToDo: sleep?
-		forceplot = erg.getForcePlot()
-		force.extend(forceplot['forceplot'])
-	else: #Get force data from end of stroke
-		forceplot = erg.getForcePlot()
-		force.extend(forceplot['forceplot'])
+    #Record force data during the drive
+    force = forceplot['forceplot'] #start of pull (when strokestate first changed to 2)
+    monitor = erg.getMonitor() #get monitor data for start of stroke
+    #Loop during drive
+    while forceplot['strokestate'] == 2:
+        #ToDo: sleep?
+        forceplot = erg.getForcePlot()
+        force.extend(forceplot['forceplot'])
+    else: #Get force data from end of stroke
+        forceplot = erg.getForcePlot()
+        force.extend(forceplot['forceplot'])
 
 
-	#Write data to file
-	workoutdata = str(monitor['time']) + "," + str(monitor['distance']) + "," + str(monitor['spm']) + "," + str(monitor['pace']) + ","
-	forcedata = ",".join([str(f) for f in force])
-	file.write(workoutdata + forcedata + '\n')
+    #Write data to file
+    workoutdata = str(monitor['time']) + "," + str(monitor['distance']) + "," + str(monitor['spm']) + "," + str(monitor['pace']) + ","
+    forcedata = ",".join([str(f) for f in force])
+    file.write(workoutdata + forcedata + '\n')
 
-	#Get workout conditions
-	workout = erg.getWorkout()
+    #Get workout conditions
+    workout = erg.getWorkout()
 
 file.close()
 print "Workout has ended"
