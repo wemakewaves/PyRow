@@ -16,8 +16,8 @@ import sys
 c2vendorID = 0x17a4
 #pm3prodID = 0x0001
 #pm4prodID = 0x0002
-inEndpoint = 0x83  #EP3 poll rate of 8ms
-outEndpoint = 0x04 #EP4 poll rate of 4ms
+# inEndpoint = 0x83  #EP3 poll rate of 8ms
+# outEndpoint = 0x04 #EP4 poll rate of 4ms
 minframegap = .050 #in seconds
 interface = 0
 
@@ -52,6 +52,12 @@ class pyrow:
             pass
 
         this.erg = erg
+
+        configuration = erg[0]
+        iface = configuration[(0,0)]
+        this.inEndpoint = iface[0].bEndpointAddress
+        this.outEndpoint = iface[1].bEndpointAddress
+
         this.__lastsend = datetime.datetime.now()
 
     def __checkvalue(this, value, label, minimum, maximum):
@@ -233,10 +239,10 @@ class pyrow:
 
 
         csafe = csafe_cmd.Write(message) #convert message to byte array
-        length = this.erg.write(outEndpoint, csafe) #sends message to erg and records length of message
+        length = this.erg.write(this.outEndpoint, csafe) #sends message to erg and records length of message
         this.__lastsend = datetime.datetime.now() #records time when message was sent
         try:
-            response = this.erg.read(inEndpoint, length) #recieves byte array from erg
+            response = this.erg.read(this.inEndpoint, length) #recieves byte array from erg
         except:
             return [] #ToDo: Replace with error or let error trigger? #No message was recieved back from erg
 
