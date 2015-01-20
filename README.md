@@ -20,23 +20,24 @@ For an explanation of the csafe commands please use the following documentation:
 Site: http://www.newhavenrowingclub.org/pyrow/
 
 ## LICENSE
-Copyright (c) 2011, Sam Gambrell
+Copyright (c) 2011 - 2015, Sam Gambrell
+
 Licensed under the Simplified BSD License.
 
 
 ## REQUIREMENTS
 PyRow has been tested on an Ubuntu machine with the software versions listed below, PyRow should be able to work on any machine that can run Python & PyUSB but this has not been tested and confirmed.
 
-Python (Tested with 2.7.2) [http://python.org/]
-libusb
+- [Python](http://python.org/) (Tested with 2.7.2)
+- [libusb](http://www.libusb.org/)
 
-    sudo apt-get install libudev-dev libusb-dev python python-usb
+        sudo apt-get install libudev-dev libusb-dev python
 
-Walac's PyUSB [http://walac.github.io/pyusb]
+- [Walac's PyUSB](http://walac.github.io/pyusb)
 
-    git clone git@github.com:walac/pyusb.git
-    cd pyusb
-    sudo python setup.py install
+        git clone git@github.com:walac/pyusb.git
+        cd pyusb
+        sudo python setup.py install
 
 Other versions of the PyRow library have been tested on Windows.
 
