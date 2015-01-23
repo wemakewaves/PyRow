@@ -180,7 +180,8 @@ class pyrow:
 
     def setWorkout(this, program=0, time=0, distance=0, split=0, pace=0, calpace=0, powerpace=0):
 
-        command = ['CSAFE_RESET_CMD']
+        this.send(['CSAFE_RESET_CMD'])
+        command = []
 
         #Set Workout Goal
         if program != 0:
