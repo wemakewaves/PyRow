@@ -178,13 +178,15 @@ class pyrow:
 
         this.send(command) #Send command to erg
 
-    def setWorkout(this, program=0, time=0, distance=0, split=0, pace=0, calpace=0, powerpace=0):
+    def setWorkout(this, program=-1, time=0, distance=0, split=0, pace=0, calpace=0, powerpace=0):
 
         this.send(['CSAFE_RESET_CMD'])
         command = []
 
+        print "SETTING PROGRAM {0}".format(program)
+
         #Set Workout Goal
-        if program != 0:
+        if program != -1:
             this.__checkvalue(program,  "Program", 0, 15)
         elif time != 0:
             if len(time) == 1: time.insert(0,0) #if only seconds in time then pad minutes
@@ -200,13 +202,13 @@ class pyrow:
 
         #Set Split
         if split != 0:
-            if time != 0 and program == 0:
+            if time != 0 and program == -1:
                 split = int(split*100)
                 timeraw = time[0]*3600+time[1]*60+time[2] #total workout time (1 sec)
                 minsplit = int(timeraw/30*100+0.5) #split time that will occur 30 times (.01 sec)
                 this.__checkvalue(split,  "Split Time", max(2000, minsplit), timeraw*100)
                 command.extend(['CSAFE_PM_SET_SPLITDURATION', 0, split])
-            elif distance != 0 and program == 0:
+            elif distance != 0 and program == -1:
                 minsplit = int(distance/30+0.5) #split distance that will occur 30 times (m)
                 this.__checkvalue(split,  "Split distance", max(100, minsplit) , distance)
                 command.extend(['CSAFE_PM_SET_SPLITDURATION', 128, split])
@@ -223,8 +225,10 @@ class pyrow:
             command.extend(['CSAFE_SETPOWER_CMD', powerpace, 88]) #88 = watts
 
 
+        if program != -1:
+            command.extend(['CSAFE_SETPROGRAM_CMD', program, 0])
 
-        command.extend(['CSAFE_SETPROGRAM_CMD', program, 0, 'CSAFE_GOINUSE_CMD'])
+        command.extend(['CSAFE_GOINUSE_CMD'])
 
         this.send(command)
 
