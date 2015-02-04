@@ -11,6 +11,7 @@ import csafe_cmd
 import datetime
 import time
 import sys
+import inspect
 
 #move what I can into class?
 c2vendorID = 0x17a4
@@ -178,15 +179,15 @@ class pyrow:
 
         this.send(command) #Send command to erg
 
-    def setWorkout(this, program=0, time=0, distance=0, split=0, pace=0, calpace=0, powerpace=0):
+    def setWorkout(this, program=None, time=None, distance=None, split=None, pace=None, calpace=None, powerpace=None):
 
         this.send(['CSAFE_RESET_CMD'])
         command = []
 
         #Set Workout Goal
-        if program != 0:
+        if program != None:
             this.__checkvalue(program,  "Program", 0, 15)
-        elif time != 0:
+        elif time != None:
             if len(time) == 1: time.insert(0,0) #if only seconds in time then pad minutes
             if len(time) == 2: time.insert(0,0) #if no hours in time then pad hours
             this.__checkvalue(time[0],  "Time Hours", 0, 9)
@@ -194,19 +195,19 @@ class pyrow:
             this.__checkvalue(time[2],  "Time Seconds", 0, 59)
             if time[0] == 0 and time[1] == 0 and time[2] < 20:  raise ValueError("Workout too short") #checks if workout is < 20 seconds
             command.extend(['CSAFE_SETTWORK_CMD', time[0], time[1], time[2]])
-        elif distance != 0:
+        elif distance != None:
             this.__checkvalue(distance,  "Distance", 100, 50000)
             command.extend(['CSAFE_SETHORIZONTAL_CMD', distance, 36]) #36 = meters
 
         #Set Split
-        if split != 0:
-            if time != 0 and program == 0:
+        if split != None:
+            if time != None and program == None:
                 split = int(split*100)
                 timeraw = time[0]*3600+time[1]*60+time[2] #total workout time (1 sec)
                 minsplit = int(timeraw/30*100+0.5) #split time that will occur 30 times (.01 sec)
                 this.__checkvalue(split,  "Split Time", max(2000, minsplit), timeraw*100)
                 command.extend(['CSAFE_PM_SET_SPLITDURATION', 0, split])
-            elif distance != 0 and program == 0:
+            elif distance != None and program == None:
                 minsplit = int(distance/30+0.5) #split distance that will occur 30 times (m)
                 this.__checkvalue(split,  "Split distance", max(100, minsplit) , distance)
                 command.extend(['CSAFE_PM_SET_SPLITDURATION', 128, split])
@@ -215,14 +216,15 @@ class pyrow:
 
 
         #Set Pace
-        if pace != 0:
+        if pace != None:
             powerpace = int(round(2.8 / ((pace / 500.) ** 3)))
-        elif calpace != 0:
+        elif calpace != None:
             powerpace = int(round((calpace - 300.)/(4.0 * 0.8604)))
-        if powerpace != 0:
+        if powerpace != None:
             command.extend(['CSAFE_SETPOWER_CMD', powerpace, 88]) #88 = watts
 
-
+        if program == None:
+            program = 0
 
         command.extend(['CSAFE_SETPROGRAM_CMD', program, 0, 'CSAFE_GOINUSE_CMD'])
 
