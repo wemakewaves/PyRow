@@ -242,10 +242,10 @@ class pyrow:
 
 
         csafe = csafe_cmd.Write(message) #convert message to byte array
-        length = this.erg.write(this.outEndpoint, csafe) #sends message to erg and records length of message
+        length = this.erg.write(this.outEndpoint, csafe, timeout=200) #sends message to erg and records length of message
         this.__lastsend = datetime.datetime.now() #records time when message was sent
         try:
-            response = this.erg.read(this.inEndpoint, length) #recieves byte array from erg
+            response = this.erg.read(this.inEndpoint, length, timeout=200) #recieves byte array from erg
         except:
             return [] #ToDo: Replace with error or let error trigger? #No message was recieved back from erg
 
