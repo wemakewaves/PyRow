@@ -11,39 +11,37 @@ import csafe_cmd
 import datetime
 import time
 import sys
-import inspect
 
-#move what I can into class?
-c2vendorID = 0x17a4
-#pm3prodID = 0x0001
-#pm4prodID = 0x0002
-# inEndpoint = 0x83  #EP3 poll rate of 8ms
-# outEndpoint = 0x04 #EP4 poll rate of 4ms
-minframegap = .050 #in seconds
-interface = 0
+C2_VENDOR_ID = 0x17a4
+MIN_FRAME_GAP = .050 #in seconds
+INTERFACE = 0
 
 def find():
-    ergs = usb.core.find(find_all=True, idVendor=c2vendorID)
-    if ergs is None: raise ValueError('Ergs not found')
+    ergs = usb.core.find(find_all=True, idVendor=C2_VENDOR_ID)
+    if ergs is None:
+        raise ValueError('Ergs not found')
     return ergs
 
-class pyrow:
 
-    def __init__(this, erg):
-        #Configures usb connection and sets erg value
+class pyrow(object):
+
+    def __init__(self, erg):
+        """
+        Configures usb connection and sets erg value
+        """
 
         if sys.platform != 'win32':
             try:
                 #Check to see if driver is attached to kernel (linux)
-                if erg.is_kernel_driver_active(interface):
-                    erg.detach_kernel_driver(interface)
+                if erg.is_kernel_driver_active(INTERFACE):
+                    erg.detach_kernel_driver(INTERFACE)
                 else:
                     print "DEBUG: usb kernel driver not on " + sys.platform
             except:
                 print "EXCEPTION"
-                pass
+
         #Claim interface (Needs Testing To See If Necessary)
-        usb.util.claim_interface(erg, interface)
+        usb.util.claim_interface(erg, INTERFACE)
 
         #Linux throws error, reason unknown
         try:
@@ -52,36 +50,50 @@ class pyrow:
         except:
             pass
 
-        this.erg = erg
+        self.erg = erg
 
         configuration = erg[0]
-        iface = configuration[(0,0)]
-        this.inEndpoint = iface[0].bEndpointAddress
-        this.outEndpoint = iface[1].bEndpointAddress
+        iface = configuration[(0, 0)]
+        self.inEndpoint = iface[0].bEndpointAddress
+        self.outEndpoint = iface[1].bEndpointAddress
 
-        this.__lastsend = datetime.datetime.now()
+        self.__lastsend = datetime.datetime.now()
 
-    def __checkvalue(this, value, label, minimum, maximum):
-        #Checks that value is an integer and within the specified range
+    @classmethod
+    def __checkvalue(cls, value, label, minimum, maximum):
+        """
+        Checks that value is an integer and within the specified range
+        """
 
         if type(value) is not int:
             raise TypeError(label)
-        if  not(minimum <= value <= maximum):
+        if  not minimum <= value <= maximum:
             raise ValueError(label + " outside of range")
         return True
 
-    def getMonitor(this, forceplot=False):
-        #Returns values from the monitor that relate to the current workout, optionally returns force plot data and stroke state
+    def get_monitor(self, forceplot=False):
+        """
+        Returns values from the monitor that relate to the current workout,
+        optionally returns force plot data and stroke state
+        """
 
-        command = ['CSAFE_PM_GET_WORKTIME', 'CSAFE_PM_GET_WORKDISTANCE', 'CSAFE_GETCADENCE_CMD', 'CSAFE_GETPOWER_CMD', 'CSAFE_GETCALORIES_CMD', 'CSAFE_GETHRCUR_CMD']
-        if forceplot: command.extend(['CSAFE_PM_GET_FORCEPLOTDATA', 32, 'CSAFE_PM_GET_STROKESTATE'])
-        results = this.send(command)
+        command = ['CSAFE_PM_GET_WORKTIME', 'CSAFE_PM_GET_WORKDISTANCE', 'CSAFE_GETCADENCE_CMD',
+                   'CSAFE_GETPOWER_CMD', 'CSAFE_GETCALORIES_CMD', 'CSAFE_GETHRCUR_CMD']
+
+        if forceplot:
+            command.extend(['CSAFE_PM_GET_FORCEPLOTDATA', 32, 'CSAFE_PM_GET_STROKESTATE'])
+        results = self.send(command)
 
         monitor = {}
-        monitor['time'] = (results['CSAFE_PM_GET_WORKTIME'][0] + results['CSAFE_PM_GET_WORKTIME'][1])/100.
-        monitor['distance'] = (results['CSAFE_PM_GET_WORKDISTANCE'][0] + results['CSAFE_PM_GET_WORKDISTANCE'][1])/10.
+        monitor['time'] = (results['CSAFE_PM_GET_WORKTIME'][0] + \
+            results['CSAFE_PM_GET_WORKTIME'][1])/100.
+
+        monitor['distance'] = (results['CSAFE_PM_GET_WORKDISTANCE'][0] + \
+            results['CSAFE_PM_GET_WORKDISTANCE'][1])/10.
+
         monitor['spm'] = results['CSAFE_GETCADENCE_CMD'][0]
-        monitor['power'] = results['CSAFE_GETPOWER_CMD'][0] #Rowing machine always returns power as Watts
+        #Rowing machine always returns power as Watts
+        monitor['power'] = results['CSAFE_GETPOWER_CMD'][0]
         if monitor['power']:
             monitor['pace'] = ((2.8 / results['CSAFE_GETPOWER_CMD'][0]) ** (1./3)) * 500
             monitor['calhr'] = results['CSAFE_GETPOWER_CMD'][0]  * (4.0 * 0.8604) + 300.
@@ -91,7 +103,8 @@ class pyrow:
         monitor['heartrate'] = results['CSAFE_GETHRCUR_CMD'][0]
 
         if forceplot:
-            datapoints = results['CSAFE_PM_GET_FORCEPLOTDATA'][0] /2 #get amount of returned data in bytes
+            #get amount of returned data in bytes
+            datapoints = results['CSAFE_PM_GET_FORCEPLOTDATA'][0] /2
             monitor['forceplot'] = results['CSAFE_PM_GET_FORCEPLOTDATA'][1:(datapoints+1)]
             monitor['strokestate'] = results['CSAFE_PM_GET_STROKESTATE'][0]
 
@@ -99,12 +112,13 @@ class pyrow:
 
         return monitor
 
-
-    def getForcePlot(this):
-        #Returns force plot data and stroke state
+    def get_force_plot(self):
+        """
+        Returns force plot data and stroke state
+        """
 
         command = ['CSAFE_PM_GET_FORCEPLOTDATA', 32, 'CSAFE_PM_GET_STROKESTATE']
-        results = this.send(command)
+        results = self.send(command)
 
         forceplot = {}
         datapoints = results['CSAFE_PM_GET_FORCEPLOTDATA'][0] / 2
@@ -116,11 +130,14 @@ class pyrow:
         return forceplot
 
 
-    def getWorkout(this):
-        #Returns overall workout data
+    def get_workout(self):
+        """
+        Returns overall workout data
+        """
 
-        command = ['CSAFE_GETID_CMD', 'CSAFE_PM_GET_WORKOUTTYPE', 'CSAFE_PM_GET_WORKOUTSTATE', 'CSAFE_PM_GET_INTERVALTYPE', 'CSAFE_PM_GET_WORKOUTINTERVALCOUNT']
-        results = this.send(command)
+        command = ['CSAFE_GETID_CMD', 'CSAFE_PM_GET_WORKOUTTYPE', 'CSAFE_PM_GET_WORKOUTSTATE',
+                   'CSAFE_PM_GET_INTERVALTYPE', 'CSAFE_PM_GET_WORKOUTINTERVALCOUNT']
+        results = self.send(command)
 
         workoutdata = {}
         workoutdata['userid'] = results['CSAFE_GETID_CMD'][0]
@@ -133,12 +150,13 @@ class pyrow:
 
         return workoutdata
 
-
-    def getErg(this):
-        #Returns all erg data that is not related to the workout
+    def get_erg(self):
+        """
+        Returns all erg data that is not related to the workout
+        """
 
         command = ['CSAFE_GETVERSION_CMD', 'CSAFE_GETSERIAL_CMD', 'CSAFE_GETCAPS_CMD', 0x00]
-        results = this.send(command)
+        results = self.send(command)
 
         ergdata = {}
         #Get data from csafe get version command
@@ -158,58 +176,80 @@ class pyrow:
 
         return ergdata
 
-    def getStatus(this):
-        #Returns the status of the erg
+    def get_status(self):
+        """
+        Returns the status of the erg
+        """
 
         command = ['CSAFE_GETSTATUS_CMD', ]
-        results = this.send(command)
+        results = self.send(command)
 
         status = {}
         status['status'] = results['CSAFE_GETSTATUS_CMD'][0] & 0xF
 
         return status
 
-    def setClock(this):
-        #Sets the erg clock to the computers current time and date
+
+    def set_clock(self):
+        """
+        Sets the erg clock to the computers current time and date
+        """
 
         now = datetime.datetime.now() #Get current date and time
 
-        command = ['CSAFE_SETTIME_CMD', now.hour, now.minute, now.second] #Set time
-        command.extend(['CSAFE_SETDATE_CMD', (now.year-1900), now.month, now.day]) #Set date
+        command = ['CSAFE_SETTIME_CMD', now.hour, now.minute, now.second]
+        command.extend(['CSAFE_SETDATE_CMD', (now.year-1900), now.month, now.day])
 
-        this.send(command) #Send command to erg
+        self.send(command)
 
-    def setWorkout(this, program=None, time=None, distance=None, split=None, pace=None, calpace=None, powerpace=None):
+    def set_workout(self, program=None, workout_time=None, distance=None, split=None,
+                    pace=None, calpace=None, powerpace=None):
+        """
+        If machine is in the ready state, function will set the
+        workout and display the start workout screen
+        """
 
-        this.send(['CSAFE_RESET_CMD'])
+        self.send(['CSAFE_RESET_CMD'])
         command = []
 
         #Set Workout Goal
         if program != None:
-            this.__checkvalue(program,  "Program", 0, 15)
-        elif time != None:
-            if len(time) == 1: time.insert(0,0) #if only seconds in time then pad minutes
-            if len(time) == 2: time.insert(0,0) #if no hours in time then pad hours
-            this.__checkvalue(time[0],  "Time Hours", 0, 9)
-            this.__checkvalue(time[1],  "Time Minutes", 0, 59)
-            this.__checkvalue(time[2],  "Time Seconds", 0, 59)
-            if time[0] == 0 and time[1] == 0 and time[2] < 20:  raise ValueError("Workout too short") #checks if workout is < 20 seconds
-            command.extend(['CSAFE_SETTWORK_CMD', time[0], time[1], time[2]])
+            self.__checkvalue(program, "Program", 0, 15)
+        elif workout_time != None:
+            if len(workout_time) == 1:
+                #if only seconds in workout_time then pad minutes
+                workout_time.insert(0, 0)
+            if len(workout_time) == 2:
+                #if no hours in workout_time then pad hours
+                workout_time.insert(0, 0) #if no hours in workout_time then pad hours
+            self.__checkvalue(workout_time[0], "Time Hours", 0, 9)
+            self.__checkvalue(workout_time[1], "Time Minutes", 0, 59)
+            self.__checkvalue(workout_time[2], "Time Seconds", 0, 59)
+
+            if workout_time[0] == 0 and workout_time[1] == 0 and workout_time[2] < 20:
+                #checks if workout is < 20 seconds
+                raise ValueError("Workout too short")
+
+            command.extend(['CSAFE_SETTWORK_CMD', workout_time[0],
+                            workout_time[1], workout_time[2]])
+
         elif distance != None:
-            this.__checkvalue(distance,  "Distance", 100, 50000)
+            self.__checkvalue(distance, "Distance", 100, 50000)
             command.extend(['CSAFE_SETHORIZONTAL_CMD', distance, 36]) #36 = meters
 
         #Set Split
         if split != None:
-            if time != None and program == None:
+            if workout_time != None and program == None:
                 split = int(split*100)
-                timeraw = time[0]*3600+time[1]*60+time[2] #total workout time (1 sec)
-                minsplit = int(timeraw/30*100+0.5) #split time that will occur 30 times (.01 sec)
-                this.__checkvalue(split,  "Split Time", max(2000, minsplit), timeraw*100)
+                #total workout workout_time (1 sec)
+                time_raw = workout_time[0]*3600+workout_time[1]*60+workout_time[2]
+                #split workout_time that will occur 30 workout_times (.01 sec)
+                minsplit = int(time_raw/30*100+0.5)
+                self.__checkvalue(split, "Split Time", max(2000, minsplit), time_raw*100)
                 command.extend(['CSAFE_PM_SET_SPLITDURATION', 0, split])
             elif distance != None and program == None:
-                minsplit = int(distance/30+0.5) #split distance that will occur 30 times (m)
-                this.__checkvalue(split,  "Split distance", max(100, minsplit) , distance)
+                minsplit = int(distance/30+0.5) #split distance that will occur 30 workout_times (m)
+                self.__checkvalue(split, "Split distance", max(100, minsplit), distance)
                 command.extend(['CSAFE_PM_SET_SPLITDURATION', 128, split])
             else:
                 raise ValueError("Cannot set split for current goal")
@@ -228,26 +268,34 @@ class pyrow:
 
         command.extend(['CSAFE_SETPROGRAM_CMD', program, 0, 'CSAFE_GOINUSE_CMD'])
 
-        this.send(command)
+        self.send(command)
 
-    def send(this, message):
-        #Converts and sends message to erg; recieves, converts, and returns ergs response
+    def send(self, message):
+        """
+        Converts and sends message to erg; receives, converts, and returns ergs response
+        """
 
-        #Checks that enought time has passed since the last message was sent, if not program sleeps till time has passed
+        #Checks that enough time has passed since the last message was sent,
+        #if not program sleeps till time has passed
         now = datetime.datetime.now()
-        delta = now - this.__lastsend
+        delta = now - self.__lastsend
         deltaraw = delta.seconds + delta.microseconds/1000000.
-        if deltaraw < minframegap:
-            time.sleep(minframegap - deltaraw)
+        if deltaraw < MIN_FRAME_GAP:
+            time.sleep(MIN_FRAME_GAP - deltaraw)
 
-
-        csafe = csafe_cmd.Write(message) #convert message to byte array
-        length = this.erg.write(this.outEndpoint, csafe, timeout=200) #sends message to erg and records length of message
-        this.__lastsend = datetime.datetime.now() #records time when message was sent
+        #convert message to byte array
+        csafe = csafe_cmd.write(message)
+        #sends message to erg and records length of message
+        length = self.erg.write(self.outEndpoint, csafe, timeout=200)
+        #records time when message was sent
+        self.__lastsend = datetime.datetime.now()
         try:
-            response = this.erg.read(this.inEndpoint, length, timeout=200) #recieves byte array from erg
+            #recieves byte array from erg
+            response = self.erg.read(self.inEndpoint, length, timeout=200)
         except:
-            return [] #ToDo: Replace with error or let error trigger? #No message was recieved back from erg
+            #Replace with error or let error trigger?
+            #No message was recieved back from erg
+            return []
 
-        returned = csafe_cmd.Read(response) #convers byte array to response dictionary
-        return returned
+        #convers byte array to response dictionary
+        return csafe_cmd.read(response)
