@@ -286,12 +286,12 @@ class pyrow(object):
         #convert message to byte array
         csafe = csafe_cmd.write(message)
         #sends message to erg and records length of message
-        length = self.erg.write(self.outEndpoint, csafe, timeout=200)
+        length = self.erg.write(self.outEndpoint, csafe, timeout=2000)
         #records time when message was sent
         self.__lastsend = datetime.datetime.now()
         try:
             #recieves byte array from erg
-            response = self.erg.read(self.inEndpoint, length, timeout=200)
+            response = self.erg.read(self.inEndpoint, length, timeout=2000)
         except:
             #Replace with error or let error trigger?
             #No message was recieved back from erg
