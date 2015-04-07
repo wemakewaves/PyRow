@@ -7,6 +7,7 @@
 
 import usb.core
 import usb.util
+from usb import USBError
 import csafe_cmd
 import datetime
 import time
@@ -47,9 +48,9 @@ class pyrow(object):
         try:
             erg.set_configuration() #required to configure USB connection
             #Ubuntu Linux returns 'usb.core.USBError: Resource busy' but rest of code still works
-        except:
-            pass
-
+        except Exception as e:
+            if not isinstance(e, USBError):
+                raise e
         self.erg = erg
 
         configuration = erg[0]
@@ -289,13 +290,18 @@ class pyrow(object):
         length = self.erg.write(self.outEndpoint, csafe, timeout=2000)
         #records time when message was sent
         self.__lastsend = datetime.datetime.now()
-        try:
-            #recieves byte array from erg
-            response = self.erg.read(self.inEndpoint, length, timeout=2000)
-        except:
-            #Replace with error or let error trigger?
-            #No message was recieved back from erg
-            return []
+
+        response = []
+        while not response:
+            try:
+                #recieves byte array from erg
+                transmission = self.erg.read(self.inEndpoint, length, timeout=2000)
+                response = csafe_cmd.read(transmission)
+            except Exception as e:
+                raise e
+                #Replace with error or let error trigger?
+                #No message was recieved back from erg
+                # return []
 
         #convers byte array to response dictionary
-        return csafe_cmd.read(response)
+        return response
