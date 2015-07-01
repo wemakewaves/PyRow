@@ -1,5 +1,5 @@
 """
-PyRow.Concept2.PerformanceMonitor
+Concept2.PerformanceMonitor
 """
 # coding=utf-8
 __author__ = 'UVD'

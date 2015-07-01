@@ -7,7 +7,7 @@ __author__ = 'UVD'
 import unittest
 import mock
 
-from PyRow.tests.Concept2.Device import PM3
+from tests.Concept2.Device import PM3
 
 import sys
 sys.modules['usb'] = mock.Mock()
@@ -22,7 +22,7 @@ def usb_util_get_string_side_effect(device, key):
 
 sys.modules['usb'].util.get_string = mock.Mock(side_effect=usb_util_get_string_side_effect)
 
-from PyRow.Concept2.PerformanceMonitor import PerformanceMonitor
+from Concept2.PerformanceMonitor import PerformanceMonitor
 
 class PerformanceMonitorTests(unittest.TestCase):
     """
