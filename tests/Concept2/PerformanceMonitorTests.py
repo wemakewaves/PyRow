@@ -1,5 +1,5 @@
 """
-tests.Concept2.PerformanceMonitorTests
+tests.PyRow.Concept2.PerformanceMonitorTests
 """
 # coding=utf-8
 __author__ = 'UVD'
@@ -7,7 +7,8 @@ __author__ = 'UVD'
 import unittest
 import mock
 
-from PyRow.tests.Concept2.Device import PM3
+
+from tests.Concept2.Device import PM3
 
 import sys
 sys.modules['usb'] = mock.Mock()
@@ -44,7 +45,7 @@ class PerformanceMonitorTests(unittest.TestCase):
         """
         self.assertEqual(
             self.performance_monitor.get_manufacturer(),
-            "Concept2"
+            "PyRow.Concept2"
         )
 
     def test_get_product(self):
@@ -54,7 +55,7 @@ class PerformanceMonitorTests(unittest.TestCase):
         """
         self.assertEqual(
             self.performance_monitor.get_product(),
-            "Concept2 Performance Monitor 3 (PM3)"
+            "PyRow.Concept2 Performance Monitor 3 (PM3)"
         )
 
     def test_serial_number(self):

@@ -1,5 +1,5 @@
 """
-tests.PyRow.Concept2
+PyRow
 """
 # coding=utf-8
 __author__ = 'UVD'

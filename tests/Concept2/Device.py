@@ -1,5 +1,5 @@
 """
-tests.Concept2.Device
+tests.PyRow.Concept2.Device
 """
 # coding=utf-8
 __author__ = 'UVD'
@@ -29,9 +29,9 @@ class PM3(mock.Mock):
         :return:
         """
         if self.iManufacturer == key:
-            return "Concept2"
+            return "PyRow.Concept2"
         elif self.iProduct == key:
-            return "Concept2 Performance Monitor 3 (PM3)"
+            return "PyRow.Concept2 Performance Monitor 3 (PM3)"
         elif self.iSerialNumber == key:
             return "400124190"
 

@@ -1,5 +1,5 @@
 """
-Concept2.PerformanceMonitor
+PyRow.Concept2.PerformanceMonitor
 """
 # coding=utf-8
 __author__ = 'UVD'
@@ -11,7 +11,7 @@ import time
 class PerformanceMonitor(object):
     """
     PerformanceMonitor
-    This class provides an interface between PyRow and a Concept2 Performance Monitor device
+    This class provides an interface between PyRow and a PyRow.Concept2 Performance Monitor device
     Example device:
     DEVICE ID 17a4:0001 on Bus 001 Address 004 =================
      bLength                :   0x12 (18 bytes)
@@ -24,8 +24,8 @@ class PerformanceMonitor(object):
      idVendor               : 0x17a4
      idProduct              : 0x0001
      bcdDevice              :  0x100 Device 1.0
-     iManufacturer          :    0x1 Concept2
-     iProduct               :    0x2 Concept2 Performance Monitor 3 (PM3)
+     iManufacturer          :    0x1 PyRow.Concept2
+     iProduct               :    0x2 PyRow.Concept2 Performance Monitor 3 (PM3)
      iSerialNumber          :    0x3 400124190
      bNumConfigurations     :    0x1
       CONFIGURATION 1: 98 mA ===================================
