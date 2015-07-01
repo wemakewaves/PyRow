@@ -29,9 +29,9 @@ class PM3(mock.Mock):
         :return:
         """
         if self.iManufacturer == key:
-            return "PyRow.Concept2"
+            return "Concept2"
         elif self.iProduct == key:
-            return "PyRow.Concept2 Performance Monitor 3 (PM3)"
+            return "Concept2 Performance Monitor 3 (PM3)"
         elif self.iSerialNumber == key:
             return "400124190"
 

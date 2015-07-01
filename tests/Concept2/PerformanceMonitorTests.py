@@ -5,12 +5,12 @@ tests.PyRow.Concept2.PerformanceMonitorTests
 __author__ = 'UVD'
 
 import unittest
+import sys
+
 import mock
 
+from PyRow.tests.Concept2.Device import PM3
 
-from tests.Concept2.Device import PM3
-
-import sys
 sys.modules['usb'] = mock.Mock()
 sys.modules['usb.util'] = mock.Mock()
 def usb_util_get_string_side_effect(device, key):
@@ -45,7 +45,7 @@ class PerformanceMonitorTests(unittest.TestCase):
         """
         self.assertEqual(
             self.performance_monitor.get_manufacturer(),
-            "PyRow.Concept2"
+            "Concept2"
         )
 
     def test_get_product(self):
@@ -55,7 +55,7 @@ class PerformanceMonitorTests(unittest.TestCase):
         """
         self.assertEqual(
             self.performance_monitor.get_product(),
-            "PyRow.Concept2 Performance Monitor 3 (PM3)"
+            "Concept2 Performance Monitor 3 (PM3)"
         )
 
     def test_serial_number(self):
