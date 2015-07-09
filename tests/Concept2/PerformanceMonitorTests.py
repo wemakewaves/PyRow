@@ -23,7 +23,11 @@ def usb_util_get_string_side_effect(device, key):
 
 sys.modules['usb'].util.get_string = mock.Mock(side_effect=usb_util_get_string_side_effect)
 
+sys.modules['Lock'] = mock.Mock()
+sys.modules['Lock'].acquire = mock.Mock()
+
 from PyRow.Concept2.PerformanceMonitor import PerformanceMonitor
+from PyRow.Concept2.Response import Response
 
 class PerformanceMonitorTests(unittest.TestCase):
     """
@@ -70,10 +74,32 @@ class PerformanceMonitorTests(unittest.TestCase):
 
     def test_get_pm_version(self):
         """
-        PerformanceMonitory.get_pm_version - it should return the PM Version
+        PerformanceMonitor.get_pm_version - it should return the PM Version
         :return:
         """
         self.assertEqual(
             self.performance_monitor.get_pm_version(),
             "PM3"
         )
+
+    def test_send_commands(self):
+        """
+        PerformanceMonitor.send_commands - it should send commands to the Ergometer and return the response
+        :return:
+        """
+        # It should block any other requests to the device by locking the object
+
+        # It should return a Response object
+        self.device.write = mock.Mock(return_value=80)
+        self.device.read = mock.Mock(return_value=['B', [1, 241, 129, 26, 10, 191, 1, 0, 163, 5, 0, 0, 0, 0, 0, 137, 242, 0, 0, 0, 0]])
+        self.assertEqual(
+            self.performance_monitor.send_commands([PerformanceMonitor.GET_STATUS]).__class__,
+            Response
+        )
+
+    def test_get_status(self):
+        """
+        PerformanceMonitor.get_status - it should return a Response with the PM's status in
+        :return:
+        """
+        pass

@@ -5,10 +5,13 @@ PyRow.Concept2.PerformanceMonitor
 __author__ = 'UVD'
 
 import usb.util
+from usb import USBError
+import sys
 import time
 from threading import Lock
 from PyRow import csafe_cmd
 from PyRow.Concept2.Response import Response
+from PyRow.Concept2.Exception.BadStateException import BadStateException
 
 
 class PerformanceMonitor(object):
@@ -104,6 +107,14 @@ class PerformanceMonitor(object):
     GO_FINISHED = 'CSAFE_GOFINISHED_CMD'
     GO_IDLE = 'CSAFE_GOIDLE_CMD'
     GO_READY = 'CSAFE_GOREADY_CMD'
+    GO_IN_USE = 'CSAFE_GOINUSE_CMD'
+    RESET = 'CSAFE_RESET_CMD'
+
+    SET_WORKOUT = 'CSAFE_SETTWORK_CMD'
+    SET_HORIZONTAL = 'CSAFE_SETHORIZONTAL_CMD'
+    SET_SPLIT_DURATION = 'CSAFE_PM_SET_SPLITDURATION'
+    SET_POWER = 'CSAFE_SETPOWER_CMD'
+    SET_PROGRAM = 'CSAFE_SETPROGRAM_CMD'
 
     def __init__(self, device):
         """
@@ -111,6 +122,19 @@ class PerformanceMonitor(object):
         :return:
         """
         self.__device = device
+        if sys.platform != 'win32':
+            if device.is_kernel_driver_active(0):
+                device.detach_kernel_driver(0)
+            else:
+                print "DEBUG: usb kernel driver not on " + sys.platform
+
+        usb.util.claim_interface(device, 0)
+
+        try:
+            device.set_configuration()
+        except USBError as e:
+            pass
+
         interface = device[0][(0, 0)]
         self.__in_address = interface[0].bEndpointAddress
         self.__out_address = interface[1].bEndpointAddress
@@ -121,6 +145,8 @@ class PerformanceMonitor(object):
 
         self.__last_message = time.time()
         self.__lock = Lock()
+
+        self.reset()
 
     def get_manufacturer(self):
         """
@@ -154,13 +180,12 @@ class PerformanceMonitor(object):
         self.__lock.acquire()
         now = time.time()
         delta = now - self.__last_message
-        deltaraw = delta.seconds + delta.microseconds/1000000.
-        if deltaraw < PerformanceMonitor.MIN_FRAME_GAP:
-            time.sleep(PerformanceMonitor.MIN_FRAME_GAP - deltaraw)
+        if delta < PerformanceMonitor.MIN_FRAME_GAP:
+            time.sleep(PerformanceMonitor.MIN_FRAME_GAP - delta)
 
-        csafe = csafe_cmd.write(commands)
+        c_safe = csafe_cmd.write(commands)
 
-        length = self.__device.write(self.__out_address, csafe, timeout=PerformanceMonitor.TIMEOUT)
+        length = self.__device.write(self.__out_address, c_safe, timeout=PerformanceMonitor.TIMEOUT)
         self.__last_message = time.time()
 
         response = []
@@ -190,21 +215,122 @@ class PerformanceMonitor(object):
         Resets the Performance Monitor or throws an Exception if unable to
         :return:
         """
-        state = self.get_status()
-        print "Current Status: {0}".format(state.get_status_message())
+        response = self.get_status()
+        print "Current Status: {0}".format(response.get_status_message())
 
-        manual = state.get_status() == PerformanceMonitor.STATE_MANUAL
-        offline = state.get_status() == PerformanceMonitor.STATE_OFFLINE
+        manual = response.get_status() == PerformanceMonitor.STATE_MANUAL
+        offline = response.get_status() == PerformanceMonitor.STATE_OFFLINE
 
         if manual or offline:
-            # TODO: Make Exception class
-            raise Exception("Ergometer is in: {0}".format(state.get_status_message()))
+            raise BadStateException(self, response.get_status_message())
 
-        finished = state.get_status() == PerformanceMonitor.STATE_FINISHED
-        ready = state.get_status() == PerformanceMonitor.STATE_READY
+        finished = response.get_status() == PerformanceMonitor.STATE_FINISHED
+        ready = response.get_status() == PerformanceMonitor.STATE_READY
 
         if not finished and not ready:
             self.send_commands([PerformanceMonitor.GO_FINISHED])
+            while self.get_status().get_status() != PerformanceMonitor.STATE_FINISHED:
+                print "Waiting for Finish"
 
         self.send_commands([PerformanceMonitor.GO_IDLE])
+        while self.get_status().get_status() != PerformanceMonitor.STATE_IDLE:
+            print "Waiting for Idle"
         self.send_commands([PerformanceMonitor.GO_READY])
+        while self.get_status().get_status() != PerformanceMonitor.STATE_READY:
+            print "Waiting for Ready"
+
+    def set_workout(self,
+                    program=None,
+                    workout_time=None,
+                    distance=None,
+                    split=None,
+                    pace=None,
+                    cal_pace=None,
+                    power_pace=None):
+        """
+        If machine is in the ready state, function will set the
+        workout and display the start workout screen
+        """
+
+        self.send_commands([PerformanceMonitor.RESET])
+        command = []
+
+        # Set Workout Goal
+        if program is not None:
+            self.__validate_value(program, "Program", 0, 15)
+        elif workout_time is not None:
+            if len(workout_time) == 1:
+                # if only seconds in workout_time then pad minutes
+                workout_time.insert(0, 0)
+            if len(workout_time) == 2:
+                # if no hours in workout_time then pad hours
+                workout_time.insert(0, 0) # if no hours in workout_time then pad hours
+            self.__validate_value(workout_time[0], "Time Hours", 0, 9)
+            self.__validate_value(workout_time[1], "Time Minutes", 0, 59)
+            self.__validate_value(workout_time[2], "Time Seconds", 0, 59)
+
+            if workout_time[0] == 0 and workout_time[1] == 0 and workout_time[2] < 20:
+                # checks if workout is < 20 seconds
+                raise ValueError("Workout too short")
+
+            command.extend([PerformanceMonitor.SET_WORKOUT, workout_time[0],
+                            workout_time[1], workout_time[2]])
+
+        elif distance is not None:
+            self.__validate_value(distance, "Distance", 100, 50000)
+            command.extend([PerformanceMonitor.SET_HORIZONTAL, distance, 36])  # 36 = meters
+
+        # Set Split
+        if split is not None:
+            if workout_time is not None and program is None:
+                split = int(split * 100)
+                # total workout workout_time (1 sec)
+                time_raw = workout_time[0] * 3600 + workout_time[1] * 60 + workout_time[2]
+                # split workout_time that will occur 30 workout_times (.01 sec)
+                min_split = int(time_raw/30*100+0.5)
+                self.__validate_value(split, "Split Time", max(2000, min_split), time_raw*100)
+                command.extend([PerformanceMonitor.SET_SPLIT_DURATION, 0, split])
+            elif distance is not None and program is None:
+                min_split = int(distance/30+0.5) # split distance that will occur 30 workout_times (m)
+                self.__validate_value(split, "Split distance", max(100, min_split), distance)
+                command.extend([PerformanceMonitor.SET_SPLIT_DURATION, 128, split])
+            else:
+                raise ValueError("Cannot set split for current goal")
+
+        # Set Pace
+        if pace is not None:
+            power_pace = int(round(2.8 / ((pace / 500.) ** 3)))
+        elif cal_pace is not None:
+            power_pace = int(round((cal_pace - 300.)/(4.0 * 0.8604)))
+        if power_pace is not None:
+            command.extend([PerformanceMonitor.SET_POWER, power_pace, 88])  # 88 = watts
+
+        if program is None:
+            program = 0
+
+        command.extend([PerformanceMonitor.SET_PROGRAM, program, 0, PerformanceMonitor.GO_IN_USE])
+
+        response = self.send_commands(command)
+        in_use = response.get_status() == PerformanceMonitor.STATE_IN_USE
+        while not in_use:
+            print "Waiting to go IN USE"
+            in_use = self.get_status().get_status() == PerformanceMonitor.STATE_IN_USE
+
+        if PerformanceMonitor.SET_HORIZONTAL in command:
+            while self.send_commands([PerformanceMonitor.GET_DISTANCE]).get_distance() != distance:
+                print "Waiting for DISTANCE"
+        if PerformanceMonitor.SET_WORKOUT in command:
+            length = workout_time[0]*60*60 + workout_time[1]*60 + workout_time[2]
+            while self.send_commands([PerformanceMonitor.GET_TIME]).get_time() != length:
+                print "Waiting for LENGTH"
+
+    @staticmethod
+    def __validate_value(value, label, minimum, maximum):
+        """
+        Checks that value is an integer and within the specified range
+        """
+        if type(value) is not int:
+            raise TypeError(label)
+        if not minimum <= value <= maximum:
+            raise ValueError(label + " outside of range")
+        return True

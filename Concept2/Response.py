@@ -14,6 +14,12 @@ class Response:
         self.__results = results
         pass
 
+    def get_raw(self):
+        """
+        :return:
+        """
+        return self.__results
+
     def get_time(self):
         """
         Get time remaining

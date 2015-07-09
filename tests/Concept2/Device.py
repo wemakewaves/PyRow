@@ -5,6 +5,7 @@ tests.PyRow.Concept2.Device
 __author__ = 'UVD'
 
 import mock
+import json
 
 class PM3(mock.Mock):
     """
@@ -23,6 +24,20 @@ class PM3(mock.Mock):
 
         self.idProduct = 0x0001
 
+        in_endpoint = mock.Mock()
+        out_endpoint = mock.Mock()
+        in_endpoint.bEndPointAddress = 'IN_ENDPOINT'
+        out_endpoint.bEndPointAddress = 'OUT_ENDPOINT'
+
+        self.info = [
+            {
+                (0, 0): [
+                    in_endpoint,
+                    out_endpoint
+                ]
+            }
+        ]
+
     def get_usb_util_string(self, key):
         """
         :param int key:
@@ -36,3 +51,6 @@ class PM3(mock.Mock):
             return "400124190"
 
         raise Exception("Unknown descriptor: {0}".format(key))
+
+    def __getitem__(self, item):
+        return self.info[item]
