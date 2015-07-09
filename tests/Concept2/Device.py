@@ -54,3 +54,29 @@ class PM3(mock.Mock):
 
     def __getitem__(self, item):
         return self.info[item]
+
+    def is_kernel_driver_active(self, value):
+        return False
+
+    def set_configuration(self):
+        pass
+
+    def write(self, address, commands, timeout=2000):
+        """
+        TODO: Mock return based on commands
+        :param address:
+        :param commands:
+        :param timeout:
+        :return:
+        """
+        return 80
+
+    def read(self, address, length, timeout=2000):
+        """
+        TODO: Mock return based on last command
+        :param address:
+        :param length:
+        :param timeout:
+        :return:
+        """
+        return []
