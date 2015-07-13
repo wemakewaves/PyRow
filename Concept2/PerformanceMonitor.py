@@ -252,7 +252,7 @@ class PerformanceMonitor(object):
         workout and display the start workout screen
         """
 
-        self.send_commands([PerformanceMonitor.RESET])
+        self.reset()
         command = []
 
         # Set Workout Goal
