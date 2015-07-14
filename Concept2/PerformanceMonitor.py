@@ -116,6 +116,13 @@ class PerformanceMonitor(object):
     SET_POWER = 'CSAFE_SETPOWER_CMD'
     SET_PROGRAM = 'CSAFE_SETPROGRAM_CMD'
 
+    @staticmethod
+    def find():
+        ergs = usb.core.find(find_all=True, idVendor=PerformanceMonitor.VENDOR_ID)
+        if ergs is None:
+            raise ValueError('Ergs not found')
+        return ergs
+
     def __init__(self, device):
         """
         :param Device device:
