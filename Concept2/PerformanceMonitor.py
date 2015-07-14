@@ -256,15 +256,17 @@ class PerformanceMonitor(object):
         command = []
 
         # Set Workout Goal
+        program_num = 0
         if program is not None:
             self.__validate_value(program, "Program", 0, 15)
+            program_num = program
         elif workout_time is not None:
             if len(workout_time) == 1:
                 # if only seconds in workout_time then pad minutes
                 workout_time.insert(0, 0)
             if len(workout_time) == 2:
                 # if no hours in workout_time then pad hours
-                workout_time.insert(0, 0) # if no hours in workout_time then pad hours
+                workout_time.insert(0, 0)
             self.__validate_value(workout_time[0], "Time Hours", 0, 9)
             self.__validate_value(workout_time[1], "Time Minutes", 0, 59)
             self.__validate_value(workout_time[2], "Time Seconds", 0, 59)
@@ -283,13 +285,13 @@ class PerformanceMonitor(object):
         # Set Split
         if split is not None:
             if workout_time is not None and program is None:
-                split = int(split * 100)
+                split_time = int(split * 100)
                 # total workout workout_time (1 sec)
                 time_raw = workout_time[0] * 3600 + workout_time[1] * 60 + workout_time[2]
                 # split workout_time that will occur 30 workout_times (.01 sec)
                 min_split = int(time_raw/30*100+0.5)
-                self.__validate_value(split, "Split Time", max(2000, min_split), time_raw*100)
-                command.extend([PerformanceMonitor.SET_SPLIT_DURATION, 0, split])
+                self.__validate_value(split_time, "Split Time", max(2000, min_split), time_raw*100)
+                command.extend([PerformanceMonitor.SET_SPLIT_DURATION, 0, split_time])
             elif distance is not None and program is None:
                 min_split = int(distance/30+0.5) # split distance that will occur 30 workout_times (m)
                 self.__validate_value(split, "Split distance", max(100, min_split), distance)
@@ -305,24 +307,20 @@ class PerformanceMonitor(object):
         if power_pace is not None:
             command.extend([PerformanceMonitor.SET_POWER, power_pace, 88])  # 88 = watts
 
-        if program is None:
-            program = 0
+        command.extend([PerformanceMonitor.SET_PROGRAM, program_num, 0, PerformanceMonitor.GO_IN_USE])
 
-        command.extend([PerformanceMonitor.SET_PROGRAM, program, 0, PerformanceMonitor.GO_IN_USE])
+        self.send_commands(command)
 
-        response = self.send_commands(command)
-        in_use = response.get_status() == PerformanceMonitor.STATE_IN_USE
-        while not in_use:
-            print "Waiting to go IN USE"
-            in_use = self.get_status().get_status() == PerformanceMonitor.STATE_IN_USE
-
-        if PerformanceMonitor.SET_HORIZONTAL in command:
-            while self.send_commands([PerformanceMonitor.GET_DISTANCE]).get_distance() != distance:
-                print "Waiting for DISTANCE"
-        if PerformanceMonitor.SET_WORKOUT in command:
-            length = workout_time[0]*60*60 + workout_time[1]*60 + workout_time[2]
-            while self.send_commands([PerformanceMonitor.GET_TIME]).get_time() != length:
-                print "Waiting for LENGTH"
+        if not self.__wait_for_workout(command, workout_time, distance):
+            self.set_workout(
+                program,
+                workout_time,
+                distance,
+                split,
+                pace,
+                cal_pace,
+                power_pace
+            )
 
     @staticmethod
     def __validate_value(value, label, minimum, maximum):
@@ -334,3 +332,26 @@ class PerformanceMonitor(object):
         if not minimum <= value <= maximum:
             raise ValueError(label + " outside of range")
         return True
+
+    def __wait_for_workout(self, command, workout_time, distance, max_attempts=5):
+        """
+        :param command:
+        :param workout_time:
+        :param distance:
+        :return:
+        """
+        attempts = 0
+        while attempts < max_attempts:
+            in_use = self.get_status().get_status() == PerformanceMonitor.STATE_IN_USE
+
+            if PerformanceMonitor.SET_HORIZONTAL in command and in_use:
+                if self.send_commands([PerformanceMonitor.GET_DISTANCE]).get_distance() == distance:
+                    return True
+
+            elif PerformanceMonitor.SET_WORKOUT in command and in_use:
+                length = workout_time[0]*60*60 + workout_time[1]*60 + workout_time[2]
+                if self.send_commands([PerformanceMonitor.GET_TIME]).get_time() == length:
+                    return True
+
+            attempts += 1
+        return False
