@@ -120,8 +120,11 @@ class PerformanceMonitor(object):
     def find():
         ergs = usb.core.find(find_all=True, idVendor=PerformanceMonitor.VENDOR_ID)
         if ergs is None:
-            raise ValueError('Ergs not found')
-        return ergs
+            raise ValueError('No Ergometers were found.')
+        pms = []
+        for erg in ergs:
+            pms.append(PerformanceMonitor(erg))
+        return pms
 
     def __init__(self, device):
         """
