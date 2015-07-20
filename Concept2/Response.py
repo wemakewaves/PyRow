@@ -1,7 +1,8 @@
 # coding=utf-8
 __author__ = 'UVD'
 
-class Response:
+
+class Response(object):
     """
     Response
     """
@@ -92,7 +93,7 @@ class Response:
         Strokes per minute
         :return:
         """
-        if 'CSAFE_GETSTATUS_CMD' in self.__results.keys():
+        if 'CSAFE_GETCADENCE_CMD' in self.__results.keys():
             return self.__results['CSAFE_GETCADENCE_CMD'][0]
         return None
 
