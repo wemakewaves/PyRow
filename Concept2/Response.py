@@ -13,7 +13,6 @@ class Response(object):
 
     def __init__(self, results):
         self.__results = results
-        print results
         pass
 
     def get_raw(self):
