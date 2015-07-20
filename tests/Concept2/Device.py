@@ -5,7 +5,7 @@ tests.PyRow.Concept2.Device
 __author__ = 'UVD'
 
 import mock
-import json
+
 
 class PM3(mock.Mock):
     """
@@ -17,6 +17,8 @@ class PM3(mock.Mock):
         :return:
         """
         mock.Mock.__init__(self)
+
+        self.__commands = []
 
         self.iManufacturer = 0x1
         self.iProduct = 0x2
@@ -53,12 +55,23 @@ class PM3(mock.Mock):
         raise Exception("Unknown descriptor: {0}".format(key))
 
     def __getitem__(self, item):
+        """
+        :param item:
+        :return mixed:
+        """
         return self.info[item]
 
     def is_kernel_driver_active(self, value):
+        """
+        :param value:
+        :return boolean:
+        """
         return False
 
     def set_configuration(self):
+        """
+        :return:
+        """
         pass
 
     def write(self, address, commands, timeout=2000):
@@ -69,6 +82,9 @@ class PM3(mock.Mock):
         :param timeout:
         :return:
         """
+
+        self.__commands = commands
+
         return 80
 
     def read(self, address, length, timeout=2000):
@@ -79,4 +95,5 @@ class PM3(mock.Mock):
         :param timeout:
         :return:
         """
+
         return []

@@ -12,6 +12,7 @@ class Response:
 
     def __init__(self, results):
         self.__results = results
+        print results
         pass
 
     def get_raw(self):
@@ -75,6 +76,7 @@ class Response:
         """
         if 'CSAFE_GETSTATUS_CMD' in self.__results.keys():
             return self.__results['CSAFE_GETSTATUS_CMD'][0] & 0xF
+
         return None
 
     def get_status_message(self):

@@ -10,9 +10,13 @@ import sys
 import mock
 
 from PyRow.tests.Concept2.Device import PM3
+from PyRow.tests.Concept2.CsafeCmd import CsafeCmd
 
 sys.modules['usb'] = mock.Mock()
 sys.modules['usb.util'] = mock.Mock()
+sys.modules['PyRow.Concept2.CsafeCmd'] = mock.Mock()  # Mocking the file
+sys.modules['PyRow.Concept2.CsafeCmd'].CsafeCmd = CsafeCmd()
+
 def usb_util_get_string_side_effect(device, key):
     """
     :param device:
@@ -29,6 +33,7 @@ sys.modules['Lock'].acquire = mock.Mock()
 from PyRow.Concept2.PerformanceMonitor import PerformanceMonitor
 from PyRow.Concept2.Response import Response
 
+
 class PerformanceMonitorTests(unittest.TestCase):
     """
     Tests for PerformanceMonitor
@@ -40,6 +45,23 @@ class PerformanceMonitorTests(unittest.TestCase):
         :return:
         """
         self.device = PM3()
+        sys.modules['PyRow.Concept2.CsafeCmd'].CsafeCmd.set_responses([
+            {
+                'CSAFE_GETSTATUS_CMD': [1]  # Ready state
+            },
+            {
+                'CSAFE_GETSTATUS_CMD': [2]  # Idle state
+            },
+            {
+                'CSAFE_GETSTATUS_CMD': [2]
+            },
+            {
+                'CSAFE_GETSTATUS_CMD': [1]
+            },
+            {
+                'CSAFE_GETSTATUS_CMD': [1]
+            }
+        ])
         self.performance_monitor = PerformanceMonitor(self.device)
 
     def test_get_manufacturer(self):
@@ -89,9 +111,13 @@ class PerformanceMonitorTests(unittest.TestCase):
         """
         # It should block any other requests to the device by locking the object
 
+
         # It should return a Response object
-        self.device.write = mock.Mock(return_value=80)
-        self.device.read = mock.Mock(return_value=['B', [1, 241, 129, 26, 10, 191, 1, 0, 163, 5, 0, 0, 0, 0, 0, 137, 242, 0, 0, 0, 0]])
+        sys.modules['PyRow.Concept2.CsafeCmd'].CsafeCmd.set_responses([
+            {
+                'CSAFE_GETSTATUS_CMD': [2]  # Idle state
+            }
+        ])
         self.assertEqual(
             self.performance_monitor.send_commands([PerformanceMonitor.GET_STATUS]).__class__,
             Response

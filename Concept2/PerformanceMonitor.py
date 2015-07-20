@@ -9,7 +9,7 @@ from usb import USBError
 import sys
 import time
 from threading import Lock
-from PyRow import csafe_cmd
+from PyRow.Concept2.CsafeCmd import CsafeCmd
 from PyRow.Concept2.Response import Response
 from PyRow.Concept2.Exception.BadStateException import BadStateException
 
@@ -118,7 +118,7 @@ class PerformanceMonitor(object):
 
     @staticmethod
     def find():
-        ergs = usb.core.find(find_all=True, idVendor=PerformanceMonitor.VENDOR_ID)
+        ergs = usb.core.find(find_all=True, idVendor=PerformanceMonitor.VENDOR_ID,)
         if ergs is None:
             raise ValueError('No Ergometers were found.')
         pms = []
@@ -193,7 +193,7 @@ class PerformanceMonitor(object):
         if delta < PerformanceMonitor.MIN_FRAME_GAP:
             time.sleep(PerformanceMonitor.MIN_FRAME_GAP - delta)
 
-        c_safe = csafe_cmd.write(commands)
+        c_safe = CsafeCmd.write(commands)
 
         length = self.__device.write(self.__out_address, c_safe, timeout=PerformanceMonitor.TIMEOUT)
         self.__last_message = time.time()
@@ -201,8 +201,8 @@ class PerformanceMonitor(object):
         response = []
         while not response:
             try:
-                transmission = self.__device.read(self.__in_address, length, timeout=2000)
-                response = csafe_cmd.read(transmission)
+                transmission = self.__device.read(self.__in_address, length, timeout=20000)
+                response = CsafeCmd.read(transmission)
             except Exception as e:
                 raise e
 
@@ -245,6 +245,7 @@ class PerformanceMonitor(object):
         self.send_commands([PerformanceMonitor.GO_IDLE])
         while self.get_status().get_status() != PerformanceMonitor.STATE_IDLE:
             print "Waiting for Idle"
+
         self.send_commands([PerformanceMonitor.GO_READY])
         while self.get_status().get_status() != PerformanceMonitor.STATE_READY:
             print "Waiting for Ready"

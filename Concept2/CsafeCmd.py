@@ -170,7 +170,7 @@ class CsafeCmd:
             message.insert(0, 0x02)
             message += [0] * (121 - len(message))
             if max_response > 121:
-                print "Response may be too long to recieve.  Max possible length " + str(max_response)
+                print "Response may be too long to receive.  Max possible length " + str(max_response)
         else:
             print "Message too long.  Message length " + str(len(message))
             message = []
