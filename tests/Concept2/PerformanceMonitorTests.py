@@ -26,6 +26,7 @@ def usb_util_get_string_side_effect(device, key):
     return device.get_usb_util_string(key)
 
 sys.modules['usb'].util.get_string = mock.Mock(side_effect=usb_util_get_string_side_effect)
+sys.modules['usb'].core.find = mock.Mock(return_value=[PM3()])
 
 sys.modules['Lock'] = mock.Mock()
 sys.modules['Lock'].acquire = mock.Mock()
@@ -45,7 +46,7 @@ class PerformanceMonitorTests(unittest.TestCase):
         :return:
         """
         self.device = PM3()
-        sys.modules['PyRow.Concept2.CsafeCmd'].CsafeCmd.set_responses([
+        self.reset_responses = [
             {
                 'CSAFE_GETSTATUS_CMD': [1]  # Ready state
             },
@@ -61,8 +62,25 @@ class PerformanceMonitorTests(unittest.TestCase):
             {
                 'CSAFE_GETSTATUS_CMD': [1]
             }
-        ])
+        ]
+        sys.modules['PyRow.Concept2.CsafeCmd'].CsafeCmd.set_responses(self.reset_responses)
         self.performance_monitor = PerformanceMonitor(self.device)
+
+    def test_find(self):
+        """
+        PerformanceMonitor.find - it should return currently connected performance monitors
+        :return:
+        """
+        sys.modules['PyRow.Concept2.CsafeCmd'].CsafeCmd.set_responses(
+            self.reset_responses
+        )
+
+        returned_pms = PerformanceMonitor.find()
+
+        self.assertEqual(
+            returned_pms[0].__class__,
+            PerformanceMonitor
+        )
 
     def test_get_manufacturer(self):
         """
