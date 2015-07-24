@@ -116,14 +116,18 @@ class PerformanceMonitor(object):
     SET_POWER = 'CSAFE_SETPOWER_CMD'
     SET_PROGRAM = 'CSAFE_SETPROGRAM_CMD'
 
+    KNOWN_PMS = {}
+
     @staticmethod
     def find():
         ergs = usb.core.find(find_all=True, idVendor=PerformanceMonitor.VENDOR_ID,)
-        if ergs is None:
-            raise ValueError('No Ergometers were found.')
+        # if ergs is None:
+        #     raise ValueError('No Ergometers were found.')
         pms = []
         for erg in ergs:
-            pms.append(PerformanceMonitor(erg))
+            if erg.serial_number not in PerformanceMonitor.KNOWN_PMS:
+                PerformanceMonitor.KNOWN_PMS[erg.serial_number] = erg
+                pms.append(PerformanceMonitor(erg))
         return pms
 
     def __init__(self, device):
@@ -193,18 +197,20 @@ class PerformanceMonitor(object):
         if delta < PerformanceMonitor.MIN_FRAME_GAP:
             time.sleep(PerformanceMonitor.MIN_FRAME_GAP - delta)
 
-        c_safe = CsafeCmd.write(commands)
+        try:
+            c_safe = CsafeCmd.write(commands)
 
-        length = self.__device.write(self.__out_address, c_safe, timeout=PerformanceMonitor.TIMEOUT)
-        self.__last_message = time.time()
+            length = self.__device.write(self.__out_address, c_safe, timeout=PerformanceMonitor.TIMEOUT)
+            self.__last_message = time.time()
 
-        response = []
-        while not response:
-            try:
+            response = []
+            while not response:
                 transmission = self.__device.read(self.__in_address, length, timeout=20000)
                 response = CsafeCmd.read(transmission)
-            except Exception as e:
-                raise e
+        except Exception as e:
+            del PerformanceMonitor.KNOWN_PMS[self.__serial_number]
+            usb.util.release_interface(self.__device, 0)
+            raise e
 
         time.sleep(PerformanceMonitor.MIN_FRAME_GAP)
         self.__lock.release()
@@ -232,6 +238,8 @@ class PerformanceMonitor(object):
         offline = response.get_status() == PerformanceMonitor.STATE_OFFLINE
 
         if manual or offline:
+            del PerformanceMonitor.KNOWN_PMS[self.__serial_number]
+            usb.util.release_interface(self.__device, 0)
             raise BadStateException(self, response.get_status_message())
 
         finished = response.get_status() == PerformanceMonitor.STATE_FINISHED
