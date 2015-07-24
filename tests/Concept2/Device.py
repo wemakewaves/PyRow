@@ -20,6 +20,8 @@ class PM3(mock.Mock):
 
         self.__commands = []
 
+        self.serial_number = "400124190"
+
         self.iManufacturer = 0x1
         self.iProduct = 0x2
         self.iSerialNumber = 0x3
