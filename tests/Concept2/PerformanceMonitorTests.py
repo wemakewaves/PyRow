@@ -2,6 +2,8 @@
 tests.PyRow.Concept2.PerformanceMonitorTests
 """
 # coding=utf-8
+from PyRow.Concept2.Exception.BadStateException import BadStateException
+
 __author__ = 'UVD'
 
 import unittest
@@ -127,9 +129,6 @@ class PerformanceMonitorTests(unittest.TestCase):
         PerformanceMonitor.send_commands - it should send commands to the Ergometer and return the response
         :return:
         """
-        # It should block any other requests to the device by locking the object
-
-
         # It should return a Response object
         sys.modules['PyRow.Concept2.CsafeCmd'].CsafeCmd.set_responses([
             {
@@ -146,4 +145,32 @@ class PerformanceMonitorTests(unittest.TestCase):
         PerformanceMonitor.get_status - it should return a Response with the PM's status in
         :return:
         """
-        pass
+        # It should return a Response object
+        sys.modules['PyRow.Concept2.CsafeCmd'].CsafeCmd.set_responses([
+            {
+                'CSAFE_GETSTATUS_CMD': [2]  # Idle state
+            }
+        ])
+        self.assertEqual(
+            self.performance_monitor.send_commands([PerformanceMonitor.GET_STATUS]).get_status(),
+            2
+        )
+
+    def test_it_should_throw_bad_state_exception_if_manual_or_offline(self):
+        """
+        PerformanceMonitor.reset - it throw an exception if get status returns manual or offline
+        :return:
+        """
+        # It should return a Response object
+        sys.modules['PyRow.Concept2.CsafeCmd'].CsafeCmd.set_responses([
+            {
+                'CSAFE_GETSTATUS_CMD': [9]  # Offline state
+            }
+        ])
+
+        self.assertRaises(BadStateException, self.performance_monitor.reset)
+
+        self.assertEqual(
+            PerformanceMonitor.KNOWN_PMS,
+            {}
+        )
