@@ -212,7 +212,6 @@ class PerformanceMonitor(object):
             usb.util.release_interface(self.__device, 0)
             raise e
 
-        time.sleep(PerformanceMonitor.MIN_FRAME_GAP)
         self.__lock.release()
 
         return Response(response)
