@@ -3,6 +3,7 @@ tests.PyRow.Concept2.PerformanceMonitorTests
 """
 # coding=utf-8
 from PyRow.Concept2.Exception.BadStateException import BadStateException
+from PyRow.Concept2.Exception.RetryLimitException import RetryLimitException
 
 __author__ = 'UVD'
 
@@ -173,4 +174,85 @@ class PerformanceMonitorTests(unittest.TestCase):
         self.assertEqual(
             PerformanceMonitor.KNOWN_PMS,
             {}
+        )
+
+    def test_it_should_throw_an_exception_if_waiting_for_finish_is_too_long(self):
+        """
+        PerformanceMonitor.reset - it should throw an exception if "Waiting for Finish" is too long
+        :return:
+        """
+        PerformanceMonitor.RESET_RETRY_LIMIT = 2
+        sys.modules['PyRow.Concept2.CsafeCmd'].CsafeCmd.set_responses([
+            {
+                'CSAFE_GETSTATUS_CMD': [2]  # Idle state
+            },
+            {
+                'CSAFE_GETSTATUS_CMD': [2]  # Idle state
+            },
+            {
+                'CSAFE_GETSTATUS_CMD': [2]  # Idle state
+            },
+            {
+                'CSAFE_GETSTATUS_CMD': [2]  # Idle state
+            }
+        ])
+
+        self.assertRaises(
+            RetryLimitException,
+            self.performance_monitor.reset
+        )
+
+    def test_it_should_throw_an_exception_if_waiting_for_idle_is_too_long(self):
+        """
+        PerformanceMonitor.reset - it should throw an exception if "Waiting for Idle" is too long
+        :return:
+        """
+        PerformanceMonitor.RESET_RETRY_LIMIT = 2
+        sys.modules['PyRow.Concept2.CsafeCmd'].CsafeCmd.set_responses([
+            {
+                'CSAFE_GETSTATUS_CMD': [7]  # Finish state
+            },
+            {
+                'CSAFE_GETSTATUS_CMD': [7]  # Finish state
+            },
+            {
+                'CSAFE_GETSTATUS_CMD': [7]  # Finish state
+            },
+            {
+                'CSAFE_GETSTATUS_CMD': [7]  # Finish state
+            }
+        ])
+
+        self.assertRaises(
+            RetryLimitException,
+            self.performance_monitor.reset
+        )
+
+    def test_it_should_throw_an_exception_if_waiting_for_ready_is_too_long(self):
+        """
+        PerformanceMonitor.reset - it should throw an exception if "Waiting for Ready" is too long
+        :return:
+        """
+        PerformanceMonitor.RESET_RETRY_LIMIT = 2
+        sys.modules['PyRow.Concept2.CsafeCmd'].CsafeCmd.set_responses([
+            {
+                'CSAFE_GETSTATUS_CMD': [2]  # Idle state
+            },
+            {
+                'CSAFE_GETSTATUS_CMD': [2]  # Idle state
+            },
+            {
+                'CSAFE_GETSTATUS_CMD': [2]  # Idle state
+            },
+            {
+                'CSAFE_GETSTATUS_CMD': [2]  # Idle state
+            },
+            {
+                'CSAFE_GETSTATUS_CMD': [2]  # Idle state
+            }
+        ])
+
+        self.assertRaises(
+            RetryLimitException,
+            self.performance_monitor.reset
         )

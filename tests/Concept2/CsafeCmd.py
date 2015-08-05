@@ -33,6 +33,7 @@ class CsafeCmd(mock.Mock):
             raise Exception("Not enough mocked responses")
         response = self.__responses[self.read_call_count]
         self.read_call_count += 1
+        print "Read: {0}".format(response)
         return response
 
     def write(self, commands):

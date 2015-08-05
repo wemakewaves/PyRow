@@ -12,6 +12,7 @@ from threading import Lock
 from PyRow.Concept2.CsafeCmd import CsafeCmd
 from PyRow.Concept2.Response import Response
 from PyRow.Concept2.Exception.BadStateException import BadStateException
+from PyRow.Concept2.Exception.RetryLimitException import RetryLimitException
 
 
 class PerformanceMonitor(object):
@@ -116,6 +117,8 @@ class PerformanceMonitor(object):
     SET_POWER = 'CSAFE_SETPOWER_CMD'
     SET_PROGRAM = 'CSAFE_SETPROGRAM_CMD'
 
+    RESET_RETRY_LIMIT = 60
+
     KNOWN_PMS = {}
 
     @staticmethod
@@ -197,20 +200,20 @@ class PerformanceMonitor(object):
         if delta < PerformanceMonitor.MIN_FRAME_GAP:
             time.sleep(PerformanceMonitor.MIN_FRAME_GAP - delta)
 
-        try:
-            c_safe = CsafeCmd.write(commands)
+        # try:
+        c_safe = CsafeCmd.write(commands)
 
-            length = self.__device.write(self.__out_address, c_safe, timeout=PerformanceMonitor.TIMEOUT)
-            self.__last_message = time.time()
+        length = self.__device.write(self.__out_address, c_safe, timeout=PerformanceMonitor.TIMEOUT)
+        self.__last_message = time.time()
 
-            response = []
-            while not response:
-                transmission = self.__device.read(self.__in_address, length, timeout=20000)
-                response = CsafeCmd.read(transmission)
-        except Exception as e:
-            del PerformanceMonitor.KNOWN_PMS[self.__serial_number]
-            usb.util.release_interface(self.__device, 0)
-            raise e
+        response = []
+        while not response:
+            transmission = self.__device.read(self.__in_address, length, timeout=20000)
+            response = CsafeCmd.read(transmission)
+        # except Exception as e:
+        #     del PerformanceMonitor.KNOWN_PMS[self.__serial_number]
+        #     usb.util.release_interface(self.__device, 0)
+        #     raise e
 
         self.__lock.release()
 
@@ -232,6 +235,7 @@ class PerformanceMonitor(object):
         """
         response = self.get_status()
         print "Current Status: {0}".format(response.get_status_message())
+        print "Retry Limit: {0}".format(PerformanceMonitor.RESET_RETRY_LIMIT)
 
         manual = response.get_status() == PerformanceMonitor.STATE_MANUAL
         offline = response.get_status() == PerformanceMonitor.STATE_OFFLINE
@@ -246,16 +250,28 @@ class PerformanceMonitor(object):
 
         if not finished and not ready:
             self.send_commands([PerformanceMonitor.GO_FINISHED])
+            i = 0
             while self.get_status().get_status() != PerformanceMonitor.STATE_FINISHED:
                 print "Waiting for Finish"
+                i += 1
+                if i >= PerformanceMonitor.RESET_RETRY_LIMIT:
+                    raise RetryLimitException('Finish')
 
         self.send_commands([PerformanceMonitor.GO_IDLE])
+        i = 0
         while self.get_status().get_status() != PerformanceMonitor.STATE_IDLE:
             print "Waiting for Idle"
+            i += 1
+            if i >= PerformanceMonitor.RESET_RETRY_LIMIT:
+                raise RetryLimitException('Idle')
 
         self.send_commands([PerformanceMonitor.GO_READY])
+        i = 0
         while self.get_status().get_status() != PerformanceMonitor.STATE_READY:
             print "Waiting for Ready"
+            i += 1
+            if i >= PerformanceMonitor.RESET_RETRY_LIMIT:
+                raise RetryLimitException('Ready')
 
     def set_workout(self,
                     program=None,
