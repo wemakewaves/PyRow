@@ -200,20 +200,20 @@ class PerformanceMonitor(object):
         if delta < PerformanceMonitor.MIN_FRAME_GAP:
             time.sleep(PerformanceMonitor.MIN_FRAME_GAP - delta)
 
-        # try:
-        c_safe = CsafeCmd.write(commands)
+        try:
+            c_safe = CsafeCmd.write(commands)
 
-        length = self.__device.write(self.__out_address, c_safe, timeout=PerformanceMonitor.TIMEOUT)
-        self.__last_message = time.time()
+            length = self.__device.write(self.__out_address, c_safe, timeout=PerformanceMonitor.TIMEOUT)
+            self.__last_message = time.time()
 
-        response = []
-        while not response:
-            transmission = self.__device.read(self.__in_address, length, timeout=20000)
-            response = CsafeCmd.read(transmission)
-        # except Exception as e:
-        #     del PerformanceMonitor.KNOWN_PMS[self.__serial_number]
-        #     usb.util.release_interface(self.__device, 0)
-        #     raise e
+            response = []
+            while not response:
+                transmission = self.__device.read(self.__in_address, length, timeout=20000)
+                response = CsafeCmd.read(transmission)
+        except Exception as e:
+            del PerformanceMonitor.KNOWN_PMS[self.__serial_number]
+            usb.util.release_interface(self.__device, 0)
+            raise e
 
         self.__lock.release()
 
