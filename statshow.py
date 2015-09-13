@@ -18,7 +18,7 @@ if __name__ == '__main__':
     if len(ergs) == 0:
         exit("No ergs found.")
     erg = pyrow.pyrow(ergs[0])
-    print "Connected to erg."
+    print("Connected to erg.")
 
     #Create a dictionary of the different status states
     state = ['Error', 'Ready', 'Idle', 'Have ID', 'N/A', 'In Use',
@@ -46,11 +46,11 @@ if __name__ == '__main__':
         results = erg.send(command)
         if cstate != (results['CSAFE_GETSTATUS_CMD'][0] & 0xF):
             cstate = results['CSAFE_GETSTATUS_CMD'][0] & 0xF
-            print "State " + str(cstate) + ": " + state[cstate]
+            print("State " + str(cstate) + ": " + state[cstate])
         if cstroke != results['CSAFE_PM_GET_STROKESTATE'][0]:
             cstroke = results['CSAFE_PM_GET_STROKESTATE'][0]
-            print "Stroke " + str(cstroke) + ": " + stroke[cstroke]
+            print("Stroke " + str(cstroke) + ": " + stroke[cstroke])
         if cworkout != results['CSAFE_PM_GET_WORKOUTSTATE'][0]:
             cworkout = results['CSAFE_PM_GET_WORKOUTSTATE'][0]
-            print "Workout " + str(cworkout) + ": " + workout[cworkout]
+            print("Workout " + str(cworkout) + ": " + workout[cworkout])
         time.sleep(1)
