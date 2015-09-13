@@ -21,7 +21,7 @@ def find():
     ergs = usb.core.find(find_all=True, idVendor=C2_VENDOR_ID)
     if ergs is None:
         raise ValueError('Ergs not found')
-    return ergs
+    return list(ergs)
 
 
 class pyrow(object):
@@ -37,9 +37,9 @@ class pyrow(object):
                 if erg.is_kernel_driver_active(INTERFACE):
                     erg.detach_kernel_driver(INTERFACE)
                 else:
-                    print "DEBUG: usb kernel driver not on " + sys.platform
+                    print("DEBUG: usb kernel driver not on " + sys.platform)
             except:
-                print "EXCEPTION"
+                print("EXCEPTION")
 
         #Claim interface (Needs Testing To See If Necessary)
         usb.util.claim_interface(erg, INTERFACE)
@@ -105,7 +105,7 @@ class pyrow(object):
 
         if forceplot:
             #get amount of returned data in bytes
-            datapoints = results['CSAFE_PM_GET_FORCEPLOTDATA'][0] /2
+            datapoints = results['CSAFE_PM_GET_FORCEPLOTDATA'][0] // 2
             monitor['forceplot'] = results['CSAFE_PM_GET_FORCEPLOTDATA'][1:(datapoints+1)]
             monitor['strokestate'] = results['CSAFE_PM_GET_STROKESTATE'][0]
 
@@ -122,7 +122,7 @@ class pyrow(object):
         results = self.send(command)
 
         forceplot = {}
-        datapoints = results['CSAFE_PM_GET_FORCEPLOTDATA'][0] / 2
+        datapoints = results['CSAFE_PM_GET_FORCEPLOTDATA'][0] // 2
         forceplot['forceplot'] = results['CSAFE_PM_GET_FORCEPLOTDATA'][1:(datapoints+1)]
         forceplot['strokestate'] = results['CSAFE_PM_GET_STROKESTATE'][0]
 
