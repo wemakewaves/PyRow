@@ -8,6 +8,7 @@ import usb.util
 from usb import USBError
 import sys
 import time
+import datetime
 from threading import Lock
 from PyRow.Concept2.CsafeCmd import CsafeCmd
 from PyRow.Concept2.Response import Response
@@ -95,6 +96,9 @@ class PerformanceMonitor(object):
     STATE_MANUAL = 8
     STATE_OFFLINE = 9
 
+    SET_TIME = 'CSAFE_SETTIME_CMD'
+    SET_DATE = 'CSAFE_SETDATE_CMD'
+
     GET_STATUS = 'CSAFE_GETSTATUS_CMD'
     GET_TIME = 'CSAFE_PM_GET_WORKTIME'
     GET_DISTANCE = 'CSAFE_PM_GET_WORKDISTANCE'
@@ -120,7 +124,7 @@ class PerformanceMonitor(object):
 
     @staticmethod
     def find():
-        ergs = usb.core.find(find_all=True, idVendor=PerformanceMonitor.VENDOR_ID,)
+        ergs = usb.core.find(find_all=True, idVendor=PerformanceMonitor.VENDOR_ID)
         # if ergs is None:
         #     raise ValueError('No Ergometers were found.')
         pms = []
@@ -161,6 +165,18 @@ class PerformanceMonitor(object):
         self.__lock = Lock()
 
         self.reset()
+
+    def set_clock(self):
+        """
+        Sets the date and time on the Performance Monitor to match the computer
+        :return:
+        """
+        now = datetime.datetime.now()
+
+        command = [PerformanceMonitor.SET_TIME, now.hour, now.minute, now.second]
+        command.extend([PerformanceMonitor.SET_DATE, (now.year-1900), now.month, now.day])
+
+        self.send_commands(command)
 
     def get_manufacturer(self):
         """

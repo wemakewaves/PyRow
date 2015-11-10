@@ -33,6 +33,21 @@ sys.modules['usb'].core.find = mock.Mock(return_value=[PM3()])
 sys.modules['Lock'] = mock.Mock()
 sys.modules['Lock'].acquire = mock.Mock()
 
+now = mock.Mock()
+now.hour = 14
+now.minute = 45
+now.second = 22
+now.year = 2015
+now.month = 11
+now.day = 10
+date_mock = mock.Mock()
+date_mock.now = mock.Mock(return_value=now)
+d_mock = mock.Mock()
+d_mock.datetime = date_mock
+sys.modules['datetime'] = d_mock
+sys.modules['datetime.datetime'] = date_mock
+sys.modules['datetime'].datetime = date_mock
+
 from PyRow.Concept2.PerformanceMonitor import PerformanceMonitor
 from PyRow.Concept2.Response import Response
 
@@ -65,6 +80,7 @@ class PerformanceMonitorTests(unittest.TestCase):
                 'CSAFE_GETSTATUS_CMD': [1]
             }
         ]
+
         sys.modules['PyRow.Concept2.CsafeCmd'].CsafeCmd.set_responses(self.reset_responses)
         self.performance_monitor = PerformanceMonitor(self.device)
 
@@ -82,6 +98,18 @@ class PerformanceMonitorTests(unittest.TestCase):
         self.assertEqual(
             returned_pms[0].__class__,
             PerformanceMonitor
+        )
+
+    def test_set_clock(self):
+        """
+        PerformanceMonitor.set_clock - it should set the clock to the computer's time
+        :return:
+        """
+        self.performance_monitor.send_commands = mock.Mock()
+        self.performance_monitor.set_clock()
+
+        self.performance_monitor.send_commands.assert_called_with(
+            ['CSAFE_SETTIME_CMD', 14, 45, 22, 'CSAFE_SETDATE_CMD', 115, 11, 10]
         )
 
     def test_get_manufacturer(self):
