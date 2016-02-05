@@ -117,7 +117,8 @@ class PerformanceMonitor(object):
     SET_POWER = 'CSAFE_SETPOWER_CMD'
     SET_PROGRAM = 'CSAFE_SETPROGRAM_CMD'
 
-    RESET_RETRY_LIMIT = 60
+    RESET_RETRY_LIMIT = 10
+    RESET_WAIT_MAX = 0.5
 
     KNOWN_PMS = {}
 
@@ -224,18 +225,9 @@ class PerformanceMonitor(object):
         Gets the current status from the Performance Monitor
         :return Response:
         """
-        return self.send_commands([
+        response = self.send_commands([
             PerformanceMonitor.GET_STATUS
         ])
-
-    def reset(self):
-        """
-        Resets the Performance Monitor or throws an Exception if unable to
-        :return:
-        """
-        response = self.get_status()
-        print "Current Status: {0}".format(response.get_status_message())
-        print "Retry Limit: {0}".format(PerformanceMonitor.RESET_RETRY_LIMIT)
 
         manual = response.get_status() == PerformanceMonitor.STATE_MANUAL
         offline = response.get_status() == PerformanceMonitor.STATE_OFFLINE
@@ -245,33 +237,61 @@ class PerformanceMonitor(object):
             usb.util.release_interface(self.__device, 0)
             raise BadStateException(self, response.get_status_message())
 
+        return response
+
+    def reset(self):
+        """
+        Resets the Performance Monitor or throws an Exception if unable to
+        :return:
+        """
+        response = self.get_status()
+        print "Current Status: {0} on {1}".format(response.get_status_message(), self.__serial_number)
+
         finished = response.get_status() == PerformanceMonitor.STATE_FINISHED
         ready = response.get_status() == PerformanceMonitor.STATE_READY
 
         if not finished and not ready:
             self.send_commands([PerformanceMonitor.GO_FINISHED])
             i = 0
-            while self.get_status().get_status() != PerformanceMonitor.STATE_FINISHED:
-                print "Waiting for Finish"
-                i += 1
-                if i >= PerformanceMonitor.RESET_RETRY_LIMIT:
-                    raise RetryLimitException('Finish')
+            while True:
+                status = self.get_status().get_status()
+                if status == PerformanceMonitor.STATE_FINISHED:
+                    print "Finished: {0}".format(self.__serial_number)
+                    break
+                else:
+                    print "Waiting for Finish (currently: {3}) {1}/{2} on {0}".format(self.__serial_number, i, PerformanceMonitor.RESET_RETRY_LIMIT, status)
+                    time.sleep(PerformanceMonitor.MIN_FRAME_GAP)
+                    i += 1
+                    if i >= PerformanceMonitor.RESET_RETRY_LIMIT:
+                        raise RetryLimitException("Not Finished on {0}, got {1}".format(self.__serial_number, status))
 
         self.send_commands([PerformanceMonitor.GO_IDLE])
         i = 0
-        while self.get_status().get_status() != PerformanceMonitor.STATE_IDLE:
-            print "Waiting for Idle"
-            i += 1
-            if i >= PerformanceMonitor.RESET_RETRY_LIMIT:
-                raise RetryLimitException('Idle')
+        while True:
+            status = self.get_status().get_status()
+            if status == PerformanceMonitor.STATE_IDLE:
+                print "Idle: {0}".format(self.__serial_number)
+                break
+            else:
+                print "Waiting for Idle (currently: {3}) {1}/{2} on {0}".format(self.__serial_number, i, PerformanceMonitor.RESET_RETRY_LIMIT, status)
+                time.sleep(PerformanceMonitor.MIN_FRAME_GAP)
+                i += 1
+                if i >= PerformanceMonitor.RESET_RETRY_LIMIT:
+                    raise RetryLimitException("Not Idle on {0}, got {1}".format(self.__serial_number, status))
 
         self.send_commands([PerformanceMonitor.GO_READY])
         i = 0
-        while self.get_status().get_status() != PerformanceMonitor.STATE_READY:
-            print "Waiting for Ready"
-            i += 1
-            if i >= PerformanceMonitor.RESET_RETRY_LIMIT:
-                raise RetryLimitException('Ready')
+        while True:
+            status = self.get_status().get_status()
+            if status == PerformanceMonitor.STATE_READY:
+                print "Ready: {0}".format(self.__serial_number)
+                break
+            else:
+                print "Waiting for Ready (currently: {3}) {1}/{2} on {0}".format(self.__serial_number, i, PerformanceMonitor.RESET_RETRY_LIMIT, status)
+                time.sleep(PerformanceMonitor.MIN_FRAME_GAP)
+                i += 1
+                if i >= PerformanceMonitor.RESET_RETRY_LIMIT:
+                    raise RetryLimitException("Not Ready on {0}, got {1}".format(self.__serial_number, status))
 
     def set_workout(self,
                     program=None,
@@ -287,6 +307,7 @@ class PerformanceMonitor(object):
         """
 
         self.reset()
+        time.sleep(PerformanceMonitor.RESET_WAIT_MAX)
         command = []
 
         # Set Workout Goal
@@ -307,7 +328,7 @@ class PerformanceMonitor(object):
 
             if workout_time[0] == 0 and workout_time[1] == 0 and workout_time[2] < 20:
                 # checks if workout is < 20 seconds
-                raise ValueError("Workout too short")
+                raise ValueError("Workout too short on {0}".format(self.__serial_number))
 
             command.extend([PerformanceMonitor.SET_WORKOUT, workout_time[0],
                             workout_time[1], workout_time[2]])
@@ -331,7 +352,7 @@ class PerformanceMonitor(object):
                 self.__validate_value(split, "Split distance", max(100, min_split), distance)
                 command.extend([PerformanceMonitor.SET_SPLIT_DURATION, 128, split])
             else:
-                raise ValueError("Cannot set split for current goal")
+                raise ValueError("Cannot set split for current goal on {0}".format(self.__serial_number))
 
         # Set Pace
         if pace is not None:
@@ -344,8 +365,9 @@ class PerformanceMonitor(object):
         command.extend([PerformanceMonitor.SET_PROGRAM, program_num, 0, PerformanceMonitor.GO_IN_USE])
 
         self.send_commands(command)
-
+        time.sleep(PerformanceMonitor.RESET_WAIT_MAX)
         if not self.__wait_for_workout(command, workout_time, distance):
+            print "Failed to set Workout on {0}".format(self.__serial_number)
             self.set_workout(
                 program,
                 workout_time,
@@ -367,7 +389,7 @@ class PerformanceMonitor(object):
             raise ValueError(label + " outside of range")
         return True
 
-    def __wait_for_workout(self, command, workout_time, distance, max_attempts=5):
+    def __wait_for_workout(self, command, workout_time, distance, max_attempts=25):
         """
         :param command:
         :param workout_time:
@@ -379,13 +401,21 @@ class PerformanceMonitor(object):
             in_use = self.get_status().get_status() == PerformanceMonitor.STATE_IN_USE
 
             if PerformanceMonitor.SET_HORIZONTAL in command and in_use:
-                if self.send_commands([PerformanceMonitor.GET_DISTANCE]).get_distance() == distance:
+                erg_distance = self.send_commands([PerformanceMonitor.GET_DISTANCE]).get_distance()
+                if erg_distance == distance:
+                    print("Workout set on erg {1} in {0}s".format(attempts * PerformanceMonitor.RESET_WAIT_MAX, self.__serial_number))
                     return True
+                print("Erg {2} Distance: {0}, expected: {1}. Try {3}/{4}".format(erg_distance, distance, self.__serial_number, attempts, max_attempts))
 
             elif PerformanceMonitor.SET_WORKOUT in command and in_use:
                 length = workout_time[0]*60*60 + workout_time[1]*60 + workout_time[2]
-                if self.send_commands([PerformanceMonitor.GET_TIME]).get_time() == length:
+                erg_time = self.send_commands([PerformanceMonitor.GET_TIME]).get_time()
+                if erg_time == length:
+                    print("Workout set on erg {1} in {0}s".format(attempts * PerformanceMonitor.RESET_WAIT_MAX, self.__serial_number))
                     return True
+                print("Erg {2} Time: {0}, expected: {1}. Try {3}/{4}".format(erg_time, length, self.__serial_number, attempts, max_attempts))
+
+            time.sleep(PerformanceMonitor.RESET_WAIT_MAX)
 
             attempts += 1
         return False
