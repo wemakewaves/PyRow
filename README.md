@@ -8,7 +8,7 @@ Please report and findings to the author so that they may be addressed in a stab
 PyRow is python code that allows one to interact with a Concept 2 Rowing Ergometer PM3 or PM4 monitor using python.  PyRow sends and receives information from the Ergometer using csafe commands or built in functions (listed below).  The goal of PyRow is to allow for multiple platforms to have easy access to the Ergometer.
 
 For an explanation of the csafe commands please use the following documentation:
-- [Concept2 PM Communication Interface Definition](http://www.concept2.com/us/service/software/sdk/default.asp)
+- [Concept2 PM Communication Interface Definition](http://www.concept2.com/service/software/software-development-kit)
 
 
 *Need to download the SDK to get the document*
