@@ -1,11 +1,11 @@
 # PyRow
 
 *NOTE: This code has not been thoroughly tested and may not function as advertised.
-This documentation my contain mistakes or incomplete information.
-Please report and findings to the author so that they may be addressed in a stable release.*
+This documentation may contain mistakes or incomplete information.
+Please report any findings to the author so that they may be addressed in a stable release.*
 
 ## ABOUT
-PyRow is python code that allows one to interact with a Concept 2 Rowing Ergometer PM3 or PM4 monitor using python.  PyRow sends and receives information from the Ergometer using csafe commands or built in functions (listed below).  The goal of PyRow is to allow for multiple platforms to have easy access to the Ergometer.
+PyRow is python code that allows one to interact with a Concept 2 Rowing Ergometer PM3, PM4, or PM5 monitor using python.  PyRow sends and receives information from the Ergometer using csafe commands or built in functions (listed below).  The goal of PyRow is to allow for multiple platforms to have easy access to the Ergometer.
 
 For an explanation of the csafe commands please use the following documentation:
 - [Concept2 PM Communication Interface Definition](http://www.concept2.com/service/software/software-development-kit)
@@ -28,7 +28,7 @@ Licensed under the Simplified BSD License.
 ## REQUIREMENTS
 PyRow has been tested on an Ubuntu machine with the software versions listed below, PyRow should be able to work on any machine that can run Python & PyUSB but this has not been tested and confirmed.
 
-- [Python](http://python.org/) (Tested with 2.7.2)
+- [Python](http://python.org/) (Tested with 2.7.2 and 3.4.3)
 - [libusb](http://www.libusb.org/)
 
         sudo apt-get install libudev-dev libusb-dev python
@@ -38,6 +38,10 @@ PyRow has been tested on an Ubuntu machine with the software versions listed bel
         git clone git@github.com:walac/pyusb.git
         cd pyusb
         sudo python setup.py install
+
+        OR
+
+        pip install pyusb
 
 Other versions of the PyRow library have been tested on Windows.
 
@@ -61,7 +65,7 @@ Include PyRow in your code with the following line of code:
 
 ---------------------------------------
 
-`pyrow.pyrow.getStatus()` - returns status of machine as a number
+`pyrow.pyrow.get_status()` - returns status of machine as a number
   - 0 = 'Error'
   - 1 = 'Ready'
   - 2 = 'Idle'
@@ -75,7 +79,7 @@ Include PyRow in your code with the following line of code:
 
 ---------------------------------------
 
-`pyrow.pyrow.getMonitor(forceplot=False)` - returns data from the monitor in dictionary format, keys listed below with descriptions
+`pyrow.pyrow.get_monitor(forceplot=False)` - returns data from the monitor in dictionary format, keys listed below with descriptions
   - time = Monitor time in seconds
   - distance = Monitor distance in meters
   - spm = Strokes per Minute
@@ -91,14 +95,14 @@ Include PyRow in your code with the following line of code:
 
 ---------------------------------------
 
-`pyrow.pyrow.getForcePlot()` - returns force plot data and stroke state in dictionary format, keys listed below with descriptions
+`pyrow.pyrow.get_force_plot()` - returns force plot data and stroke state in dictionary format, keys listed below with descriptions
   - forceplot = Force Plot Data (array varying in length from 0 to 16)
   - strokestate = Stroke State
   - status = Machine status
 
 ---------------------------------------
 
-`pyrow.pyrow.getWorkout()` - returns data related to the overall workout in dictionary format, keys listed below with descriptions
+`pyrow.pyrow.get_workout()` - returns data related to the overall workout in dictionary format, keys listed below with descriptions
   - userid = User ID
   - type = Workout Type
   - state = Workout State
@@ -108,7 +112,7 @@ Include PyRow in your code with the following line of code:
 
 ---------------------------------------
 
-`pyrow.pyrow.getErg()` - returns non workout related data about the erg in dictionary format, keys listed below with descriptions
+`pyrow.pyrow.get_erg()` - returns non workout related data about the erg in dictionary format, keys listed below with descriptions
   - mfgid = Manufacturing ID
   - cid = CID
   - model = Erg Model
@@ -122,11 +126,11 @@ Include PyRow in your code with the following line of code:
 
 ---------------------------------------
 
-`pyrow.pyrow.setClock()` - sets the clock on the erg equal to the clock on the computer
+`pyrow.pyrow.set_clock()` - sets the clock on the erg equal to the clock on the computer
 
 ---------------------------------------
 
-`pyrow.pyrow.setWorkout()` - if machine is in the ready state function will set the workout and display the start workout screen, allowable parameters are listed below (the current PM SDK does not allow for setting invervaled workouts)
+`pyrow.pyrow.set_workout()` - if machine is in the ready state function will set the workout and display the start workout screen, allowable parameters are listed below (the current PM SDK does not allow for setting invervaled workouts)
 
 **Choose one**
 
@@ -150,7 +154,7 @@ Include PyRow in your code with the following line of code:
 
  ex: set a 2000m workout with a 500m split and a pace boat with a 2 minute pace (120 seconds)
 
-  `erg.setWorkout(distance=2000, split=500, pace=120)`
+  `erg.set_workout(distance=2000, split=500, pace=120)`
 
 ---------------------------------------
 
