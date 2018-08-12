@@ -1,14 +1,3 @@
-#!/usr/bin/env python
-#Copyright (c) 2011, Sam Gambrell
-#Licensed under the Simplified BSD License.
-
-#This is an example file to show how to make use of pyrow
-#Have the rowing machine on and plugged into the computer before starting the program
-#The program will display any changes to the machine status, stroke state, or workout state
-
-#NOTE: This code has not been thoroughly tested and may not function as advertised.
-#Please report and findings to the author so that they may be addressed in a stable release.
-
 import pyrow
 import time
 
